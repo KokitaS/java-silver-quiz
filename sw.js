@@ -1,5 +1,5 @@
 // 電波が弱い場所でも開けるように、ページと問題庫を端末にキャッシュする（通信できるときは常に最新を取りに行く）。
-const CACHE = "java-silver-quiz-v1";
+const CACHE = "java-silver-quiz-v2";
 const FILES = ["./", "index.html", "app.js", "ui.js", "bank.json", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", (event) => {
@@ -14,7 +14,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET" || new URL(event.request.url).origin !== location.origin) return;
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: "no-cache" })
       .then((res) => {
         const copy = res.clone();
         caches.open(CACHE).then((cache) => cache.put(event.request, copy));
