@@ -1,5 +1,5 @@
 // 電波が弱い場所でも開けるように、ページと問題庫を端末にキャッシュする（通信できるときは常に最新を取りに行く）。
-const CACHE = "java-silver-quiz-v2";
+const CACHE = "java-silver-quiz-v3";
 const FILES = ["./", "index.html", "app.js", "ui.js", "bank.json", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", (event) => {

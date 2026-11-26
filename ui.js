@@ -35,7 +35,10 @@ function el(tag, attrs, ...children) {
   return node;
 }
 
+let timer = null; // モックの残り時間を1秒ごとに更新する
+
 function show(...nodes) {
+  clearInterval(timer);
   app.replaceChildren(...nodes);
   window.scrollTo(0, 0);
 }
@@ -203,11 +206,22 @@ function mockQuestion() {
   if (left === 0) return mockFinish();
   const buttons = q.options.map((opt, i) => el("button", { class: "option", onclick: () => { view.answers[view.index] = i + 1; view.index += 1; view.index >= view.questions.length ? mockFinish() : mockQuestion(); } },
     el("span", { class: "no" }, String(i + 1)), el("span", { class: "text" }, opt)));
+  const remain = el("span", {}, `残り ${fmtMin(left)}`);
+  const quitMock = el("button", { class: "link", onclick: () => {
+    if (quitMock.dataset.sure) return home();
+    quitMock.dataset.sure = "1";
+    quitMock.textContent = "本当に中断？（記録されません）もう一度押す";
+  } }, "中断");
   show(
-    el("div", { class: "topbar" }, el("span", {}, `${view.index + 1} / ${view.questions.length}`), el("span", {}, `残り ${fmtMin(left)}`)),
+    el("div", { class: "topbar" }, quitMock, el("span", {}, `${view.index + 1} / ${view.questions.length}`), remain),
     ...questionBlock(q, ""),
     el("div", { class: "options" }, ...buttons),
     el("button", { class: "link", onclick: () => { view.index += 1; view.index >= view.questions.length ? mockFinish() : mockQuestion(); } }, "分からない（飛ばす）"));
+  timer = setInterval(() => {
+    const rest = Math.max(0, Math.round((view.endAt - Date.now()) / 1000));
+    remain.textContent = `残り ${fmtMin(rest)}`;
+    if (rest === 0) mockFinish();
+  }, 1000);
 }
 
 function mockFinish() {

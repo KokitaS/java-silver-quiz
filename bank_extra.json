@@ -1,0 +1,3194 @@
+[
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードの結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try (String s = \"a\") {\n            System.out.println(s);\n        }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "a と出力される",
+   "実行時に例外が発生する",
+   "何も出力されない"
+  ],
+  "answer": 1,
+  "explanation": "String は AutoCloseable を実装していないので、try-with-resources のリソースに指定できずコンパイルエラーになる。実行時例外ではなくコンパイル時に弾かれる点が紛らわしい。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードを実行すると、標準出力に何が出力されるか。",
+  "code": "public class Main {\n    static class R implements AutoCloseable {\n        public void close() { System.out.print(\"C\"); }\n    }\n    public static void main(String[] args) {\n        try (R r = new R()) { System.out.print(\"T\"); } finally { System.out.print(\"F\"); }\n    }\n}",
+  "options": [
+   "TFC",
+   "TCF",
+   "CTF",
+   "TC"
+  ],
+  "answer": 2,
+  "explanation": "リソースの close() は try ブロックの終了直後に呼ばれ、その後で finally が実行されるので TCF になる。TFC は finally が先だと誤解した場合の答え。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードの結果として正しいものはどれか。",
+  "code": "public class Main {\n    static class R implements AutoCloseable {\n        public void close() { }\n    }\n    public static void main(String[] args) {\n        try (R r = new R()) { r = null; }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "NullPointerException が発生する",
+   "何も出力されず正常終了する",
+   "close() が呼ばれないまま正常終了する"
+  ],
+  "answer": 1,
+  "explanation": "try-with-resources で宣言したリソース変数は暗黙的に final なので、再代入するとコンパイルエラーになる。実行して null になるわけではない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "try-with-resources のリソースとして宣言できる型の条件として正しいものはどれか。",
+  "code": null,
+  "options": [
+   "Serializable を実装している",
+   "final クラスである",
+   "AutoCloseable を実装している",
+   "Runnable を実装している"
+  ],
+  "answer": 3,
+  "explanation": "リソースには java.lang.AutoCloseable(またはそのサブインターフェース)を実装した型が必要。Serializable は直列化用で close とは無関係。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードを実行したときの出力はどれか。",
+  "code": "public class Main {\n    static class Conn implements AutoCloseable {\n        public void close() {\n            throw new IllegalStateException(\"close\");\n        }\n    }\n    public static void main(String[] args) {\n        try (Conn c = new Conn()) {\n            throw new RuntimeException(\"body\");\n        } catch (Exception e) {\n            System.out.println(e.getMessage() + \" \" + e.getSuppressed().length);\n        }\n    }\n}",
+  "options": [
+   "close 1",
+   "body 1",
+   "body 0",
+   "close 0"
+  ],
+  "answer": 2,
+  "explanation": "本体で発生した例外が主たる例外として catch され、close() の例外は抑制例外として追加されるので件数は 1 になる。close の例外が主になるわけではない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードを実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    static class Conn implements AutoCloseable {\n        public void close() {\n            throw new IllegalStateException(\"close\");\n        }\n    }\n    public static void main(String[] args) {\n        try (Conn c = new Conn()) {\n            System.out.println(\"work\");\n        } catch (IllegalStateException e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}",
+  "options": [
+   "work のみ出力される",
+   "work と close が順に2行出力される",
+   "close のみ出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "本体は正常終了し、その後の close() で投げられた例外が catch に渡されるので、work の後に close が出力される。本体が正常でも close の例外は catch 対象になる。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードを実行したときの出力として正しいものはどれか。",
+  "code": "public class Main {\n    static class Item implements AutoCloseable {\n        String name;\n        Item(String name) {\n            if (name.equals(\"B\")) throw new IllegalArgumentException();\n            this.name = name;\n        }\n        public void close() { System.out.println(\"close \" + name); }\n    }\n    public static void main(String[] args) {\n        try (Item a = new Item(\"A\"); Item b = new Item(\"B\")) {\n            System.out.println(\"body\");\n        } catch (IllegalArgumentException e) { System.out.println(\"caught\"); }\n    }\n}",
+  "options": [
+   "body と close A",
+   "close A と caught",
+   "caught のみ",
+   "close A と close B と caught"
+  ],
+  "answer": 2,
+  "explanation": "2つ目のリソースの生成に失敗すると本体は実行されず、すでに生成済みの A だけが close され、その後 catch が実行される。B は生成されていないので close されない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードを実行したときの結果として正しいものはどれか。",
+  "code": "public class Main {\n    static class Conn implements AutoCloseable {\n        public void close() { System.out.println(\"close\"); }\n    }\n    public static void main(String[] args) {\n        try (Conn c = null) {\n            System.out.println(\"body\");\n        } finally {\n            System.out.println(\"finally\");\n        }\n    }\n}",
+  "options": [
+   "body と finally が順に出力される",
+   "finally のみ出力される",
+   "実行時に NullPointerException が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "リソースが null の場合は close() が呼ばれるだけで何も起きず、NullPointerException にもならないので、body と finally が出力される。close の出力は null なので出ない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "try-with-resources 文の構文に関する記述として正しいものはどれか。",
+  "code": null,
+  "options": [
+   "catch も finally も書かずに try-with-resources だけで記述できる",
+   "catch ブロックを最低1つ書かなければならない",
+   "finally ブロックを必ず書かなければならない",
+   "リソースは try ブロックの中で宣言しなければならない"
+  ],
+  "answer": 1,
+  "explanation": "try-with-resources では catch も finally も省略でき、close は自動で呼ばれる。catch が必須という選択肢は、通常の try-catch との混同による誤り。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) throws Exception {\n        AutoCloseable r = new AutoCloseable() { public void close() { System.out.println(\"closed\"); } };\n        try (r) { System.out.println(\"body\"); }\n    }\n}",
+  "options": [
+   "コンパイルエラー",
+   "body と closed が順に出力される",
+   "closed と body が順に出力される",
+   "実行時例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "Java 9 以降は実質的 final な既存変数を try (r) の形で使え、本体の後に close が呼ばれる。コンパイルエラーは Java 8 以前の仕様の思い込み。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) throws Exception {\n        AutoCloseable r = new AutoCloseable() { public void close() { } };\n        r = null;\n        try (r) { System.out.println(\"x\"); }\n    }\n}",
+  "options": [
+   "x が出力される",
+   "何も出力されず正常終了する",
+   "NullPointerException が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "try (r) に使う変数は final か実質的 final でなければならず、r は再代入されているのでコンパイルエラー。null 自体は問題ないので NullPointerException ではない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try (AutoCloseable r = new AutoCloseable() { public void close() { } }) {\n            System.out.println(\"ok\");\n        }\n    }\n}",
+  "options": [
+   "ok が出力される",
+   "何も出力されない",
+   "実行時に例外が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "変数の型 AutoCloseable の close() は Exception を投げる宣言なので、catch も throws も無いとコンパイルエラー。匿名クラス側の close が throws なしでも、静的な型で判定される。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Conn implements AutoCloseable {\n        public void close() { throw new IllegalStateException(\"close\"); }\n    }\n    public static void main(String[] args) {\n        try (Conn c = new Conn()) {\n            throw new RuntimeException(\"body\");\n        } catch (RuntimeException e) {\n            System.out.println(e.getMessage() + \" \" + e.getSuppressed().length);\n            System.out.println(e.getSuppressed()[0].getMessage());\n        }\n    }\n}",
+  "options": [
+   "close 0 の後に ArrayIndexOutOfBoundsException が発生する",
+   "body 1 と close が改行区切りで出力される",
+   "close 1 と body が改行区切りで出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "本体の例外が主例外となり、close で発生した例外は抑制例外として追加されるので件数は 1。close の例外が主になると考える選択肢は逆。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、出力順が正しいものはどれか。",
+  "code": "public class Main {\n    static class Item implements AutoCloseable {\n        public void close() { System.out.println(\"close\"); }\n    }\n    public static void main(String[] args) {\n        try (Item item = new Item()) {\n            System.out.println(\"try\");\n            throw new RuntimeException();\n        } catch (RuntimeException e) {\n            System.out.println(\"catch\");\n        } finally {\n            System.out.println(\"finally\");\n        }\n    }\n}",
+  "options": [
+   "try, catch, close, finally",
+   "try, close, catch, finally",
+   "try, catch, finally, close",
+   "try, close, finally, catch"
+  ],
+  "answer": 2,
+  "explanation": "リソースの close は catch や finally より前に、try ブロックを抜ける時点で実行される。close が最後と考えるのは、finally で閉じる従来の書き方との混同。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Box implements AutoCloseable {\n        String name;\n        Box(String name) {\n            if (name.equals(\"B\")) throw new IllegalArgumentException();\n            this.name = name;\n            System.out.println(\"open \" + name);\n        }\n        public void close() { System.out.println(\"close \" + name); }\n    }\n    public static void main(String[] args) {\n        try (Box a = new Box(\"A\"); Box b = new Box(\"B\")) {\n            System.out.println(\"body\");\n        } catch (IllegalArgumentException e) { System.out.println(\"caught\"); }\n    }\n}",
+  "options": [
+   "open A, caught",
+   "open A, close A, caught",
+   "open A, body, close A, caught",
+   "open A, close B, close A, caught"
+  ],
+  "answer": 2,
+  "explanation": "2つ目の生成で例外が出ると、すでに開いた a だけが close され、その後 catch に移る。b は生成されていないので close B は出ない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Tool implements AutoCloseable {\n        public void close() { System.out.println(\"close\"); }\n        void use() { System.out.println(\"use\"); }\n    }\n    public static void main(String[] args) {\n        try (Tool tool = new Tool()) {\n            tool.use();\n        } finally {\n            tool.use();\n        }\n    }\n}",
+  "options": [
+   "use, close, use の順に出力される",
+   "use, use, close の順に出力される",
+   "実行時に例外が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "try-with-resources で宣言した変数のスコープは try ブロック内だけで、finally からは参照できないためコンパイルエラー。実行順を問う選択肢は、コンパイルが通る前提が誤り。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try (AutoCloseable r = null) {\n            System.out.println(\"in\");\n        } catch (Exception e) {\n            System.out.println(\"ex\");\n        }\n    }\n}",
+  "options": [
+   "in",
+   "in と ex が順に出力される",
+   "ex",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "リソースが null の場合、close() は呼ばれず NullPointerException も起きないので、in だけが出力される。ex が出るのは例外が起きた場合だけで、ここでは起きない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try (java.io.StringReader r = new java.io.StringReader(\"a\")) {\n            r = null;\n        }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "何も出力されず正常終了する",
+   "NullPointerException が発生する",
+   "IOException が発生する"
+  ],
+  "answer": 1,
+  "explanation": "try-with-resources のリソース変数は暗黙的に final なので、再代入するとコンパイルエラーになる。実行時の NullPointerException になるわけではない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) throws Exception {\n        java.io.StringReader r = new java.io.StringReader(\"x\");\n        try (r) {\n            System.out.println((char) r.read());\n        }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "x",
+   "120",
+   "IOException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "Java 9 以降は、実質的に final な既存の変数を try (r) の形でリソースに指定できる。read() は int を返すが (char) にキャストしているので 120 ではなく x と出力される。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class R implements AutoCloseable {\n        public void close() throws Exception { }\n    }\n    public static void main(String[] args) {\n        try (R r = new R()) { System.out.println(\"a\"); }\n    }\n}",
+  "options": [
+   "a",
+   "a が出力された後、Exception が発生する",
+   "コンパイルエラーになる",
+   "何も出力されずに正常終了する"
+  ],
+  "answer": 3,
+  "explanation": "暗黙の close() 呼び出しが検査例外 Exception を投げうるため、catch も throws もないとコンパイルエラーになる。本体が実行されて a が出る、ということにはならない。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Box implements AutoCloseable {\n        public void close() {\n            throw new IllegalStateException(\"close\");\n        }\n    }\n    public static void main(String[] args) {\n        try (Box a = new Box(); Box b = new Box()) {\n            throw new RuntimeException(\"body\");\n        } catch (RuntimeException e) {\n            System.out.println(e.getMessage() + e.getSuppressed().length);\n        }\n    }\n}",
+  "options": [
+   "body1",
+   "body2",
+   "close1",
+   "close2"
+  ],
+  "answer": 2,
+  "explanation": "本体の例外 body が主たる例外になり、2つのリソースの close() の例外がどちらも suppressed に追加されるので body2 となる。close が主になるのは本体で例外が出ない場合だけである。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Box implements AutoCloseable {\n        private final String name;\n        Box(String name) { this.name = name; }\n        public void close() {\n            throw new IllegalStateException(name);\n        }\n    }\n    public static void main(String[] args) {\n        try (Box a = new Box(\"A\"); Box b = new Box(\"B\")) {\n            System.out.println(\"body\");\n        } catch (IllegalStateException e) {\n            System.out.println(e.getMessage() + e.getSuppressed().length);\n        }\n    }\n}",
+  "options": [
+   "body の後に A1 が出力される",
+   "body の後に B1 が出力される",
+   "body の後に A0 が出力される",
+   "body の後に B0 が出力される"
+  ],
+  "answer": 2,
+  "explanation": "close は宣言の逆順なので b(B) が先に例外を投げて主たる例外になり、後から閉じる a(A) の例外が suppressed に入って B1 となる。A が主になると考えるのは宣言順に閉じると誤解した場合である。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Box implements AutoCloseable {\n        Box(String name) {\n            if (name.equals(\"bad\")) throw new IllegalArgumentException();\n            System.out.println(\"open \" + name);\n        }\n        public void close() { System.out.println(\"close\"); }\n    }\n    public static void main(String[] args) {\n        try (Box a = new Box(\"a\"); Box b = new Box(\"bad\")) {\n            System.out.println(\"body\");\n        } catch (IllegalArgumentException e) {\n            System.out.println(\"caught\");\n        }\n    }\n}",
+  "options": [
+   "open a、caught の順に出力される",
+   "open a、close、caught の順に出力される",
+   "open a、body、close、caught の順に出力される",
+   "caught のみ出力される"
+  ],
+  "answer": 2,
+  "explanation": "2つ目のリソースの生成で例外が出ると本体は実行されず、すでに生成済みの a だけが close され、その後 catch に進む。close が呼ばれないと考えるのは、初期化済みのリソースも閉じられる点を見落としている。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Box implements AutoCloseable {\n        public void close() { }\n        void hello() { System.out.println(\"hi\"); }\n    }\n    public static void main(String[] args) {\n        try (Box b = new Box()) {\n            b.hello();\n        } catch (RuntimeException e) {\n            b.hello();\n        }\n    }\n}",
+  "options": [
+   "hi が1回出力される",
+   "hi が2回出力される",
+   "コンパイルエラーになる",
+   "実行時に NullPointerException が発生する"
+  ],
+  "answer": 3,
+  "explanation": "リソース変数のスコープは try ブロック内だけで、catch 節からは参照できないためコンパイルエラーになる。catch で使えるのは try-catch-finally で外側に宣言した変数の場合である。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "phone",
+  "question": "次のコードを実行したとき、標準出力に表示される内容はどれか。",
+  "code": "public class Main {\n    static class Door implements AutoCloseable {\n        public void close() { System.out.print(\"C\"); }\n    }\n    public static void main(String[] args) {\n        try (Door d = new Door()) {\n            System.out.print(\"T\");\n        } finally {\n            System.out.print(\"F\");\n        }\n    }\n}",
+  "options": [
+   "TCF",
+   "TFC",
+   "CTF",
+   "TF"
+  ],
+  "answer": 1,
+  "explanation": "try-with-resources ではリソースの close() が catch/finally より先に呼ばれるため、T→C→F の順になる。TFC は finally が先と誤解した選択肢で、実際は close が先。"
+ },
+ {
+  "topic": "try-with-resources",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    static class Res implements AutoCloseable {\n        private String name;\n        Res(String name) { this.name = name; System.out.println(\"open \" + name); }\n        public void close() { System.out.println(\"close \" + name); }\n    }\n    public static void main(String[] args) {\n        try (Res a = new Res(\"A\"); Res b = new Res(\"B\")) {\n            System.out.println(\"body\");\n        }\n        System.out.println(\"end\");\n    }\n}",
+  "options": [
+   "open A, open B, body, close A, close B, end",
+   "open A, open B, body, close B, close A, end",
+   "open A, body, close A, open B, close B, end",
+   "open B, open A, body, close A, close B, end"
+  ],
+  "answer": 2,
+  "explanation": "リソースは宣言順に開かれ、close は逆順(B→A)で呼ばれる。選択肢1は close も宣言順だと誤解したもの。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行したときの結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try { Integer.parseInt(\"x\"); }\n        catch (NumberFormatException | IllegalArgumentException e) {\n            System.out.println(\"A\");\n        }\n    }\n}",
+  "options": [
+   "Aと出力される",
+   "実行時に例外がスローされる",
+   "コンパイルエラーになる",
+   "何も出力されない"
+  ],
+  "answer": 3,
+  "explanation": "NumberFormatException は IllegalArgumentException のサブクラスなので、multi-catch に親子関係の型を並べるとコンパイルエラーになる。「A」が出力されると考えるのは、親子関係の禁止を見落としている。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードを実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try { Object o = \"a\"; Integer i = (Integer) o; }\n        catch (ClassCastException | NullPointerException e) {\n            e = null;\n        }\n    }\n}",
+  "options": [
+   "何も出力されず正常終了する",
+   "ClassCastException がスローされる",
+   "コンパイルエラーになる",
+   "NullPointerException がスローされる"
+  ],
+  "answer": 3,
+  "explanation": "multi-catch の例外変数は暗黙的に final なので代入できず、コンパイルエラーになる。通常の単一 catch なら代入できるため、そこが紛らわしい。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイルしたときの結果として正しいものはどれか。",
+  "code": "public class Main {\n    static void f() throws Exception {\n        throw new Exception(\"x\");\n    }\n    public static void main(String[] args) {\n        f();\n    }\n}",
+  "options": [
+   "実行時に Exception がスローされる",
+   "何も出力されず正常終了する",
+   "main に throws がないためコンパイルエラーになる",
+   "f の throw 文でコンパイルエラーになる"
+  ],
+  "answer": 3,
+  "explanation": "f() はチェック例外 Exception を宣言しているので、呼び出し側の main で catch か throws が必須で、無いとコンパイルエラーになる。f 内の throw は throws で宣言済みなので問題ない。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "独自のチェック例外クラスを定義する場合、通常どのクラスを継承するか。",
+  "code": null,
+  "options": [
+   "RuntimeException",
+   "Exception",
+   "Error",
+   "Object"
+  ],
+  "answer": 2,
+  "explanation": "RuntimeException 以外の Exception のサブクラスがチェック例外になるので、Exception を継承する。RuntimeException を継承すると非チェック例外になり、catch や throws が強制されない。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行したときの出力として正しいものはどれか。",
+  "code": "class MyException extends Exception {\n    MyException(String m) { super(m); }\n}\npublic class Main {\n    static void check(int n) throws MyException {\n        if (n > 1) throw new MyException(\"big\" + n);\n        System.out.println(\"ok\" + n);\n    }\n    public static void main(String[] args) {\n        try { check(1); check(2); check(3); }\n        catch (MyException e) { System.out.println(e.getMessage()); }\n    }\n}",
+  "options": [
+   "ok1 / big2 / big3 の3行",
+   "ok1 / big2 の2行",
+   "big2 のみ",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "check(1) は ok1 を出力し、check(2) で例外がスローされて catch に移るため、check(3) は実行されず big2 が出力される。try 内の残りの文は例外発生後は実行されない。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行したときの結果として正しいものはどれか。",
+  "code": "class Base {\n    void run() throws java.io.IOException { }\n}\nclass Sub extends Base {\n    void run() throws Exception { }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"done\");\n    }\n}",
+  "options": [
+   "done と出力される",
+   "実行時に例外がスローされる",
+   "Base でコンパイルエラーになる",
+   "Sub の run でコンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "オーバーライドするメソッドは、親より広いチェック例外を throws に宣言できず、Exception は IOException より広いので Sub でコンパイルエラーになる。狭い例外や throws なしなら許される。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行したときの出力として正しいものはどれか。",
+  "code": "public class Main {\n    static void test(int n) throws Exception {\n        if (n == 0) throw new IllegalStateException();\n        if (n == 1) throw new java.io.IOException();\n        throw new Exception();\n    }\n    public static void main(String[] args) {\n        for (int i = 0; i < 3; i++) {\n            try { test(i); }\n            catch (IllegalStateException | java.io.IOException e) { System.out.print(\"A\"); }\n            catch (Exception e) { System.out.print(\"B\"); }\n        }\n    }\n}",
+  "options": [
+   "AAB",
+   "ABB",
+   "AAA",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "i=0 の IllegalStateException と i=1 の IOException は multi-catch で A、i=2 の Exception は後ろの catch で B なので AAB になる。2つの型は親子関係がないので multi-catch は合法で、後ろの Exception catch も到達可能。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイルしたときの結果として正しいものはどれか。",
+  "code": "public class Main {\n    static void work() {\n        System.out.println(\"work\");\n    }\n    public static void main(String[] args) {\n        try {\n            work();\n        } catch (java.io.IOException e) {\n            System.out.println(\"io\");\n        }\n    }\n}",
+  "options": [
+   "work と出力される",
+   "work と io が順に出力される",
+   "実行時に IOException がスローされる",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "try ブロック内で IOException がスローされる可能性がないチェック例外を catch するとコンパイルエラーになる。Exception や RuntimeException なら、スローされなくても catch できる点が違う。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try {\n            Integer.parseInt(\"x\");\n        } catch (NumberFormatException | IllegalArgumentException e) {\n            System.out.println(\"err\");\n        }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "err と出力される",
+   "何も出力されない",
+   "実行時に NumberFormatException がスローされる"
+  ],
+  "answer": 1,
+  "explanation": "NumberFormatException は IllegalArgumentException のサブクラスで、multi-catch に親子関係のある型は並べられないためコンパイルエラーになる。実行時の出力を問う選択肢は、そもそもコンパイルが通らないので誤り。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイルした結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try {\n            Object o = \"a\"; Integer i = (Integer) o;\n        } catch (ClassCastException | NullPointerException e) {\n            e = null;\n        }\n    }\n}",
+  "options": [
+   "正常にコンパイルされ、実行しても何も出力されない",
+   "実行時に ClassCastException がスローされる",
+   "コンパイルエラーになる",
+   "実行時に NullPointerException がスローされる"
+  ],
+  "answer": 3,
+  "explanation": "multi-catch の例外パラメータは暗黙的に final なので、e への代入はコンパイルエラーになる。通常の catch なら代入できるため「普通に通る」と考えがちだが、multi-catch では不可。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    static void run() throws Exception { throw new Exception(\"fail\"); }\n    public static void main(String[] args) {\n        try { run(); }\n        catch (Exception e) { System.out.println(e.getMessage()); }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "fail",
+   "java.lang.Exception",
+   "何も出力されない"
+  ],
+  "answer": 2,
+  "explanation": "run() が投げた Exception を catch が受け取り、getMessage() でコンストラクタに渡した \"fail\" が出力される。java.lang.Exception と出るのは toString() の結果であり、getMessage() ではない。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "class MyEx extends RuntimeException {}\npublic class Main {\n    static void check() { throw new MyEx(); }\n    public static void main(String[] args) {\n        check();\n        System.out.println(\"done\");\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "done と出力される",
+   "何も出力されず正常終了する",
+   "MyEx がスローされ、done は出力されない"
+  ],
+  "answer": 4,
+  "explanation": "RuntimeException を継承した例外は非チェック例外なので throws や catch は不要でコンパイルは通り、実行時に MyEx が伝播して異常終了する。チェック例外と混同するとコンパイルエラーと誤解しやすい。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、各行の出力が正しいものはどれか。",
+  "code": "public class Main {\n    static void test(int n) {\n        try {\n            if (n == 0) throw new ArithmeticException();\n            if (n == 1) throw new NullPointerException();\n            throw new IllegalStateException();\n        } catch (ArithmeticException | NullPointerException e) {\n            System.out.println(\"A\");\n        } catch (RuntimeException e) {\n            System.out.println(\"R\");\n        }\n    }\n    public static void main(String[] args) { test(0); test(1); test(2); }\n}",
+  "options": [
+   "A R R",
+   "A A R",
+   "R R R",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "0と1は multi-catch の ArithmeticException | NullPointerException に一致して A、2の IllegalStateException はそれらに該当せず RuntimeException の catch で R になる。multi-catch の後に親の RuntimeException を書くのは問題ないのでコンパイルエラーではない。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "class LowBalanceException extends Exception {\n    LowBalanceException(String msg) { super(msg); }\n}\npublic class Main {\n    static void withdraw(int balance, int amount) throws LowBalanceException {\n        if (amount > balance) throw new LowBalanceException(\"short by \" + (amount - balance));\n        System.out.println(\"ok\");\n    }\n    public static void main(String[] args) {\n        try { withdraw(100, 150); }\n        catch (LowBalanceException e) { System.out.println(e.getMessage()); }\n        finally { System.out.println(\"end\"); }\n    }\n}",
+  "options": [
+   "ok の後に end と出力される",
+   "short by 50 とだけ出力される",
+   "コンパイルエラーになる",
+   "short by 50 の後に end と出力される"
+  ],
+  "answer": 4,
+  "explanation": "150 > 100 なので例外が投げられ、catch で \"short by 50\" が出力された後、finally で end が必ず出力される。finally は例外を catch した場合でも実行されるので「end が出ない」は誤り。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "class Res {\n    Res() throws Exception { System.out.println(\"open\"); }\n    void close() { System.out.println(\"close\"); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Res r = new Res();\n        System.out.println(\"used\");\n        r.close();\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "open used close の順に1行ずつ出力される",
+   "used close の順に出力される",
+   "実行時に Exception がスローされる"
+  ],
+  "answer": 1,
+  "explanation": "コンストラクタも throws でチェック例外を宣言でき、呼び出し側の main は catch も throws もしていないためコンパイルエラーになる。実際には例外は投げられないが、コンパイラは宣言だけで判断する。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "import java.io.IOException;\npublic class Main {\n    static void work() {\n        System.out.println(\"work\");\n    }\n    public static void main(String[] args) {\n        try {\n            work();\n        } catch (IOException e) {\n            System.out.println(\"io\");\n        }\n        System.out.println(\"end\");\n    }\n}",
+  "options": [
+   "work と end が順に出力される",
+   "work、io、end が順に出力される",
+   "コンパイルエラーになる",
+   "実行時に IOException がスローされる"
+  ],
+  "answer": 3,
+  "explanation": "try 内で IOException が投げられる可能性がないのにチェック例外 IOException を catch しているため、コンパイルエラーになる。Exception や RuntimeException なら catch できるので、IOException だけが特別に弾かれる点に注意。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "throws 句について正しい説明はどれか。",
+  "code": null,
+  "options": [
+   "throws に書いた例外は、RuntimeException の子クラスであっても必ず呼び出し元で catch しなければならない",
+   "オーバーライドするメソッドは、親メソッドより広いチェック例外を throws できない",
+   "throws には例外クラスを1つしか書けない",
+   "throws を書くと、そのメソッド内で例外を throw できなくなる"
+  ],
+  "answer": 2,
+  "explanation": "オーバーライドでは、親メソッドが宣言した範囲より広いチェック例外は宣言できません。1は、RuntimeException 系は catch も宣言も不要なので誤りです。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] a) {\n        try { Integer.parseInt(\"x\"); }\n        catch (NumberFormatException | NullPointerException e) { e = null; }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "何も出力されず正常終了する",
+   "NumberFormatException で異常終了する",
+   "NullPointerException で異常終了する"
+  ],
+  "answer": 1,
+  "explanation": "multi-catch の例外変数 e は暗黙的に final なので、再代入するとコンパイルエラーです。実行時に NumberFormatException が起きる前にコンパイルで止まります。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードを実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    static void f() throws IllegalStateException {\n        throw new IllegalStateException(\"x\");\n    }\n    public static void main(String[] a) {\n        f();\n        System.out.println(\"end\");\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "end と出力される",
+   "IllegalStateException で異常終了する",
+   "何も出力されず正常終了する"
+  ],
+  "answer": 3,
+  "explanation": "IllegalStateException は非チェック例外なので処理も宣言も不要でコンパイルは通り、実行時に投げられて異常終了します。1のコンパイルエラーはチェック例外の場合の話です。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        int[] data = {1, 2};\n        String text = null;\n        try {\n            System.out.println(\"A\");\n            System.out.println(data[2]);\n            System.out.println(text.length());\n        } catch (ArrayIndexOutOfBoundsException | NullPointerException e) {\n            System.out.println(\"B\");\n        } finally {\n            System.out.println(\"C\");\n        }\n    }\n}",
+  "options": [
+   "A、B、C の順に各行へ出力される",
+   "A、C の順に出力された後、例外で異常終了する",
+   "A、B の順に出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "data[2] で配列の範囲外例外が起き、multi-catch で捕捉されて B、その後 finally で C が出力されます。2は、捕捉されず異常終了する場合の挙動なので誤りです。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "import java.io.*;\n\npublic class Main {\n    static void read() throws IOException {\n        throw new FileNotFoundException(\"f\");\n    }\n    public static void main(String[] args) {\n        try {\n            read();\n        } catch (FileNotFoundException | IOException e) {\n            System.out.println(\"error\");\n        }\n    }\n}",
+  "options": [
+   "error と出力される",
+   "コンパイルエラーになる",
+   "FileNotFoundException で異常終了する",
+   "何も出力されず正常終了する"
+  ],
+  "answer": 2,
+  "explanation": "FileNotFoundException は IOException の子クラスで、multi-catch に親子関係の型を並べるとコンパイルエラーです。実際に投げられる型が子でも、この制約は変わりません。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しい出力はどれか。",
+  "code": "class ValidationException extends Exception {\n    ValidationException(String msg, Throwable cause) { super(msg, cause); }\n}\npublic class Main {\n    static void check(String s) throws ValidationException {\n        try { Integer.parseInt(s); }\n        catch (NumberFormatException e) { throw new ValidationException(\"bad\", e); }\n    }\n    public static void main(String[] args) {\n        try { check(\"abc\"); }\n        catch (ValidationException e) { System.out.println(e.getMessage() + \":\" + e.getCause().getClass().getSimpleName()); }\n    }\n}",
+  "options": [
+   "bad:NumberFormatException",
+   "bad:ValidationException",
+   "bad:null",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "getCause() は super(msg, cause) で渡した元の NumberFormatException を返すので bad:NumberFormatException になります。bad:ValidationException になるのは、getCause() を例外自身と取り違えた場合です。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try {\n            Integer.parseInt(\"x\");\n        } catch (NumberFormatException | NullPointerException e) {\n            e = null;\n        }\n    }\n}",
+  "options": [
+   "正常終了し何も出力されない",
+   "コンパイルエラーになる",
+   "NumberFormatException が発生する",
+   "NullPointerException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "multi-catch の例外変数は暗黙的に final なので、再代入するとコンパイルエラーになる。通常の単一 catch の変数なら代入できるが、multi-catch では不可。"
+ },
+ {
+  "topic": "multi-catch・カスタム例外・throws",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "class StockException extends Exception {\n    StockException(String msg) { super(msg); }\n}\npublic class Main {\n    static void remove(int stock, int qty) throws StockException {\n        if (qty > stock) throw new StockException(\"short\");\n        System.out.println(\"ok\");\n    }\n    public static void main(String[] args) throws StockException {\n        remove(5, 3);\n        remove(5, 8);\n        System.out.println(\"done\");\n    }\n}",
+  "options": [
+   "ok と done が順に出力される",
+   "ok を出力した後、StockException が発生して終了する",
+   "StockException が発生し、ok は出力されない",
+   "main が throws を宣言していてもコンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "1回目は ok を出力し、2回目で StockException が投げられ main から外へ出て異常終了するため done は出力されない。3番目は1回目の呼び出しが先に実行され ok が出る点で誤り。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "sealed interface S permits R {}\nrecord R(int x) implements S {}\npublic class Main {\n    public static void main(String[] args) {\n        S s = new R(3);\n        System.out.println(s);\n    }\n}",
+  "options": [
+   "3",
+   "R[x=3]",
+   "S[x=3]",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "record は暗黙的に final なので sealed interface の許可サブタイプにでき、toString は R[x=3] になる。コンパイルエラーを選びがちだが、record に final や non-sealed を書く必要はない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "sealed class Tool permits Pen {}\nnon-sealed class Pen extends Tool {}\nclass Marker extends Pen {}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new Marker() instanceof Tool);\n    }\n}",
+  "options": [
+   "true",
+   "false",
+   "コンパイルエラーになる",
+   "ClassCastException"
+  ],
+  "answer": 1,
+  "explanation": "non-sealed にした Pen は制限なく継承でき、Marker も Pen 経由で Tool の一種なので true になる。Marker が permits に無いからエラー、と考えるのは誤り。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "sealed interface Level permits Mode {}\nenum Mode implements Level { LOW, HIGH }\npublic class Main {\n    public static void main(String[] args) {\n        Level l = Mode.HIGH;\n        System.out.println(l);\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "LOW",
+   "HIGH",
+   "Level"
+  ],
+  "answer": 3,
+  "explanation": "本体を持たない enum は暗黙的に final なので許可サブタイプにでき、HIGH と出力される。final を書いていないからエラー、という選択肢が紛らわしいが誤り。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "abstract sealed class Staff permits Clerk {\n    abstract String role();\n}\nfinal class Clerk extends Staff {\n    String role() { return \"clerk\"; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new Clerk().role());\n    }\n}",
+  "options": [
+   "Clerk",
+   "コンパイルエラーになる",
+   "null",
+   "clerk"
+  ],
+  "answer": 4,
+  "explanation": "sealed クラスは abstract にでき、final なサブクラスが抽象メソッドを実装していれば問題なく clerk が出力される。abstract と sealed の併用はエラーではない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "sealed interface Item permits Book, Pen {}\nrecord Book(String title) implements Item {}\nrecord Pen(int ink) implements Item {}\npublic class Main {\n    public static void main(String[] args) {\n        Item[] items = { new Book(\"Java\"), new Pen(5) };\n        for (Item i : items) {\n            if (i instanceof Book b) System.out.println(b.title());\n            else if (i instanceof Pen p) System.out.println(p.ink());\n        }\n    }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "Java と 5 が順に別の行に出力される",
+   "Book[title=Java] と Pen[ink=5] が順に出力される",
+   "ClassCastException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "配列の要素ごとに実際の型へ一致する instanceof 分岐が実行され、Java と 5 が出力される。toString の形式 Book[title=Java] は println(b.title()) では使われないので違う。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "sealed class Engine permits Gas {}\nsealed class Gas extends Engine permits Turbo {}\nfinal class Turbo extends Gas {}\npublic class Main {\n    public static void main(String[] args) {\n        Engine e = new Turbo();\n        System.out.println(e instanceof Gas);\n        System.out.println(e instanceof Turbo);\n    }\n}",
+  "options": [
+   "false と true",
+   "true と false",
+   "true と true",
+   "コンパイルエラーになる"
+  ],
+  "answer": 3,
+  "explanation": "サブクラス自身を sealed にして階層を深くでき、実体は Turbo なので Gas にも Turbo にも該当し true が2回出る。Turbo が Engine の permits に無い点を気にしても、Gas 経由で正しく許可されている。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "名前付きモジュールを使わない(無名モジュールの)プログラムで、sealed クラスの permits に指定するサブクラスの配置として正しいものはどれか。",
+  "code": null,
+  "options": [
+   "同じパッケージ内であれば、別のソースファイルに置いてもよい",
+   "どのパッケージに置いてもよい",
+   "必ず同じソースファイル内に置かなければならない",
+   "同じプロジェクトなら別の JAR に置いてもよい"
+  ],
+  "answer": 1,
+  "explanation": "無名モジュールでは sealed クラスと許可サブクラスは同じパッケージに属する必要があり、ファイルは別でもよい。「必ず同じファイル」は permits を省略する場合の条件であり、常に必要ではない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "sealed interface Greeter permits English, Japanese {\n    default String hi() { return \"Hello\"; }\n}\nrecord English() implements Greeter {}\nrecord Japanese() implements Greeter {\n    public String hi() { return \"Konnichiwa\"; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        for (Greeter g : new Greeter[] { new English(), new Japanese() }) {\n            System.out.println(g.hi());\n        }\n    }\n}",
+  "options": [
+   "Hello と Hello",
+   "Hello と Konnichiwa",
+   "Konnichiwa と Konnichiwa",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "English は default メソッドを継承して Hello、Japanese はオーバーライドして Konnichiwa を返す。sealed でも default メソッドは通常どおり使え、実行時の型で呼び先が決まる。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed static class Fruit permits Apple {}\n    static non-sealed class Apple extends Fruit {}\n    static class Fuji extends Apple {}\n    public static void main(String[] args) {\n        Fruit f = new Fuji();\n        System.out.println(f instanceof Apple);\n    }\n}",
+  "options": [
+   "true",
+   "false",
+   "コンパイルエラー",
+   "実行時に ClassCastException"
+  ],
+  "answer": 1,
+  "explanation": "Apple は non-sealed なので、permits に無い Fuji でも自由に継承でき、Fuji は Apple の一種なので true になる。コンパイルエラーになるのは non-sealed を付けない場合で、ここでは当てはまらない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Event permits Click {}\n    record Click(int x) implements Event {}\n    public static void main(String[] args) {\n        Event e = new Click(5);\n        System.out.println(e);\n    }\n}",
+  "options": [
+   "Click[x=5]",
+   "Click(x=5)",
+   "コンパイルエラー",
+   "Main$Click@ハッシュ値"
+  ],
+  "answer": 1,
+  "explanation": "record は暗黙的に final なので、final を書かなくても permits の対象になれる。toString は Click[x=5] の形式で、Click(x=5) は record の表示形式ではない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Sign permits Dir {}\n    enum Dir implements Sign { UP, DOWN }\n    public static void main(String[] args) {\n        Sign s = Dir.DOWN;\n        System.out.println(s);\n    }\n}",
+  "options": [
+   "UP",
+   "DOWN",
+   "コンパイルエラー",
+   "1"
+  ],
+  "answer": 2,
+  "explanation": "enum は暗黙的に final(または sealed)なので、sealed インターフェースの permits に指定できる。toString は定数名の DOWN を返し、序数の 1 ではない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface V permits A, B {}\n    record A() implements V {}\n    record B() implements V {}\n    public static void main(String[] args) {\n        System.out.println(V.class.isSealed() + \" \" + V.class.getPermittedSubclasses().length);\n    }\n}",
+  "options": [
+   "true 2",
+   "false 2",
+   "true 0",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "isSealed() は sealed 型なら true で、getPermittedSubclasses() は permits の A と B の2件を返す。0 件になるのは sealed でない型の場合なので違う。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Coin {}\n    record Yen(int v) implements Coin {}\n    record Dollar(int v) implements Coin {}\n    static int value(Coin c) {\n        if (c instanceof Yen y) return y.v();\n        if (c instanceof Dollar d) return d.v() * 100;\n        return 0;\n    }\n    public static void main(String[] args) {\n        System.out.println(value(new Yen(5)) + value(new Dollar(2)));\n    }\n}",
+  "options": [
+   "7",
+   "205",
+   "コンパイルエラー",
+   "200"
+  ],
+  "answer": 2,
+  "explanation": "同じソースファイル内なら permits を省略でき、Yen と Dollar が許可されるので 5 + 200 = 205 になる。permits が無いのでエラーと思いがちだが、同一ファイルなら省略できる。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static sealed class Box permits Small {\n        String name() { return \"box\"; }\n    }\n    static final class Small extends Box {\n        String name() { return \"small\"; }\n    }\n    static final class Large extends Box {\n        String name() { return \"large\"; }\n    }\n    public static void main(String[] args) {\n        Box b = new Small();\n        System.out.println(b.name());\n    }\n}",
+  "options": [
+   "small",
+   "box",
+   "large",
+   "コンパイルエラー"
+  ],
+  "answer": 4,
+  "explanation": "Large は Box の permits に無いのに extends しているためコンパイルエラーになる。Large を使っていなくても、宣言しただけでエラーになる。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Node permits Leaf, Branch {}\n    static final class Leaf implements Node {\n        public String toString() { return \"L\"; }\n    }\n    static sealed class Branch implements Node permits Twig {\n        public String toString() { return \"B\"; }\n    }\n    static final class Twig extends Branch {}\n    public static void main(String[] args) {\n        Node n = new Twig();\n        System.out.println(n);\n    }\n}",
+  "options": [
+   "T",
+   "L",
+   "B",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "Branch は自身も sealed で Twig を許可しており、正しい階層である。Twig は toString を override していないので Branch のものが使われ B が出力され、T にはならない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Mode permits On, Off {}\n    static final class On implements Mode {\n        public String toString() { return \"on\"; }\n    }\n    static final class Off {\n        public String toString() { return \"off\"; }\n    }\n    public static void main(String[] args) {\n        Mode m = new On();\n        System.out.println(m);\n    }\n}",
+  "options": [
+   "on",
+   "off",
+   "実行時に例外が発生する",
+   "コンパイルエラー"
+  ],
+  "answer": 4,
+  "explanation": "permits に挙げたクラスは必ずその sealed 型を継承・実装する必要があり、Off は Mode を実装していないのでコンパイルエラーになる。Off は使っていなくても、permits に書いた時点でエラーになる。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Box permits Small, Big {}\n    static non-sealed class Small implements Box {}\n    static final class Big implements Box {}\n    static class Tiny extends Small {}\n    public static void main(String[] a) {\n        System.out.println(new Tiny() instanceof Box);\n    }\n}",
+  "options": [
+   "true",
+   "false",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 1,
+  "explanation": "non-sealed を付けた Small は制限が解除され、誰でも継承できるので Tiny は合法で、Box でもあるため true になります。Tiny に permits の指定が必要だと考えるのは誤りです。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed static abstract class Pet permits Dog {\n        Pet() { System.out.print(\"P \"); }\n    }\n    static final class Dog extends Pet {\n        Dog() { System.out.print(\"D\"); }\n    }\n    public static void main(String[] a) { new Dog(); }\n}",
+  "options": [
+   "D",
+   "P ",
+   "P D",
+   "コンパイルエラーになる"
+  ],
+  "answer": 3,
+  "explanation": "sealed クラスでも通常の継承と同じで、子のコンストラクタ実行時に先に親のコンストラクタが呼ばれるため「P D」と出ます。親の出力が出ない「D」は誤りです。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static sealed abstract class Printer permits Laser {\n        abstract String name();\n    }\n    static final class Laser extends Printer {\n        String name() { return \"laser\"; }\n    }\n    public static void main(String[] args) {\n        Printer p = new Printer() {\n            String name() { return \"anon\"; }\n        };\n        System.out.println(p.name());\n    }\n}",
+  "options": [
+   "anon",
+   "laser",
+   "実行時に例外が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "sealed クラスを継承できるのは permits に挙げたクラスだけで、無名クラスは継承できないためコンパイルエラーです。abstract メソッドを実装していても例外にはなりません。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Employee permits Manager, Worker {}\n    static sealed class Manager implements Employee permits Director {\n        int pay() { return 500; }\n    }\n    static final class Director extends Manager {\n        int pay() { return super.pay() + 300; }\n    }\n    static final class Worker implements Employee {}\n    public static void main(String[] args) {\n        Manager m = new Director();\n        System.out.println(m.pay());\n        System.out.println(m instanceof Employee);\n    }\n}",
+  "options": [
+   "500 と true が順に表示される",
+   "800 と true が順に表示される",
+   "800 と false が順に表示される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "Manager は sealed のまま自分の permits を持て、実体は Director なのでオーバーライドされた pay() で 800 になり、Employee でもあるので true です。500 になるのは動的ディスパッチを無視した誤りです。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Fruit {}\n    record Apple() implements Fruit {}\n    record Lemon() implements Fruit {}\n    public static void main(String[] a) {\n        Fruit f = new Lemon();\n        System.out.println(f instanceof Apple);\n    }\n}",
+  "options": [
+   "true",
+   "false",
+   "コンパイルエラーになる",
+   "ClassCastException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "permits を省略した sealed インターフェースは同じファイル内のサブタイプを許可対象にするので、コンパイルは通る。f の実体は Lemon で Apple ではないため false になり、instanceof は例外を出さない。"
+ },
+ {
+  "topic": "sealed",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    sealed interface Figure permits Box, Ball {}\n    record Box(int side) implements Figure {}\n    record Ball(int radius) implements Figure {}\n    public static void main(String[] args) {\n        System.out.println(Figure.class.isSealed());\n        System.out.println(Figure.class.getPermittedSubclasses().length);\n        System.out.println(Box.class.isSealed());\n    }\n}",
+  "options": [
+   "true\n2\ntrue",
+   "true\n2\nfalse",
+   "false\n2\nfalse",
+   "コンパイルエラーになる(record は sealed を実装できない)"
+  ],
+  "answer": 2,
+  "explanation": "Figure は sealed で許可サブクラスが2つあり、record は暗黙に final なので Box.isSealed() は false になる。record が sealed インターフェースを実装できないという選択肢は誤りで、record は permits に指定できる。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "次のコードを javac でコンパイルして実行したとき、どうなるか。",
+  "code": "public class Main {\n    Main(int x) { }\n    public static void main(String[] args) {\n        new Main();\n    }\n}",
+  "options": [
+   "何も出力せず正常終了する",
+   "コンパイルエラーになる",
+   "実行時に NullPointerException が発生する",
+   "実行時に IllegalArgumentException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "引数付きコンストラクタを1つでも定義すると、デフォルトコンストラクタは自動生成されないので new Main() はコンパイルエラーになる。正常終了と思いがちだが、それはコンストラクタを1つも書かない場合だけ。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "インスタンスフィールドの初期値について、実行結果として正しいものはどれか。",
+  "code": "public class Main {\n    int n;\n    String s;\n    public static void main(String[] args) {\n        Main m = new Main();\n        System.out.println(m.n + \" \" + m.s);\n    }\n}",
+  "options": [
+   "0 null",
+   "0 (空文字)",
+   "null null",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "フィールドは自動で初期化され、int は 0、参照型は null になる。ローカル変数と違い未初期化でもコンパイルエラーにならず、String も空文字ではなく null になる。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "コンストラクタの引数名とフィールド名が同じ場合の動作として、実行結果はどれか。",
+  "code": "public class Main {\n    int v;\n    Main(int v) { v = v; }\n    public static void main(String[] args) {\n        System.out.println(new Main(5).v);\n    }\n}",
+  "options": [
+   "5",
+   "0",
+   "null",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "v = v は引数 v 自身への代入で、フィールド v は更新されず初期値 0 のままになる。フィールドに代入するには this.v = v と書く必要がある。5 を選ぶのは this の効果を誤解したもの。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "this(...) によるコンストラクタ呼び出しについて、このコードの結果はどれか。",
+  "code": "public class Main {\n    int a;\n    Main() { a = 1; this(2); }\n    Main(int a) { this.a = a; }\n    public static void main(String[] args) {\n        System.out.println(new Main().a);\n    }\n}",
+  "options": [
+   "1",
+   "2",
+   "実行時例外が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "this(...) はコンストラクタの最初の文でなければならず、2文目に書いたのでコンパイルエラーになる。順序を守れば 2 が出るが、このコードでは実行までたどり着かない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "オブジェクト生成時の初期化の順序について、実行結果として正しいものはどれか。",
+  "code": "public class Main {\n    int a = init(\"a\");\n    { System.out.println(\"block\"); }\n    Main() { System.out.println(\"ctor\"); }\n    static int init(String s) {\n        System.out.println(s);\n        return 1;\n    }\n    public static void main(String[] args) {\n        new Main();\n    }\n}",
+  "options": [
+   "a, block, ctor の順に1行ずつ出力される",
+   "ctor, a, block の順に1行ずつ出力される",
+   "block, a, ctor の順に1行ずつ出力される",
+   "a, ctor, block の順に1行ずつ出力される"
+  ],
+  "answer": 1,
+  "explanation": "フィールド初期化子とインスタンス初期化ブロックはソースの記述順に実行され、その後にコンストラクタ本体が実行される。コンストラクタが先と考えるのが典型的な間違い。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "final フィールドとコンストラクタに関して、このコードをコンパイルしたときの結果はどれか。",
+  "code": "public class Main {\n    private final int id;\n    private String name;\n    Main(int id) {\n        this.id = id;\n    }\n    Main(String name) {\n        this.name = name;\n    }\n    public static void main(String[] args) {\n        System.out.println(new Main(1).id);\n    }\n}",
+  "options": [
+   "1 と出力される",
+   "0 と出力される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "final フィールドはすべてのコンストラクタで必ず初期化する必要があり、Main(String) は id を代入していないのでコンパイルエラーになる。int の既定値 0 が入るわけではない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "this を戻り値にしたメソッドを連続して呼び出したときの出力はどれか。",
+  "code": "public class Main {\n    int count;\n    Main add(int n) {\n        count += n;\n        return this;\n    }\n    public static void main(String[] args) {\n        Main m = new Main();\n        Main r = m.add(2).add(3);\n        System.out.println(m.count + \" \" + (m == r));\n    }\n}",
+  "options": [
+   "5 false",
+   "3 true",
+   "5 true",
+   "2 true"
+  ],
+  "answer": 3,
+  "explanation": "this は呼び出し対象のオブジェクト自身なので、2回の add は同じインスタンスの count に加算されて 5 になり、r も m と同じ参照で true になる。新しいオブジェクトが返ると考えると false を選んでしまう。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "オブジェクト参照をメソッドに渡したときのフィールドの値について、実行結果はどれか。",
+  "code": "class Box {\n    int size = 1;\n}\npublic class Main {\n    static void grow(Box b) {\n        b.size++;\n        b = new Box();\n        b.size = 10;\n    }\n    public static void main(String[] args) {\n        Box box = new Box();\n        grow(box);\n        System.out.println(box.size);\n    }\n}",
+  "options": [
+   "1",
+   "2",
+   "10",
+   "11"
+  ],
+  "answer": 2,
+  "explanation": "参照のコピーが渡されるので、b.size++ で元のオブジェクトは 2 になる。その後 b に新しい Box を代入しても呼び出し元の box は変わらず、10 にはならない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "class A {\n    A(int x) { }\n}\npublic class Main {\n    public static void main(String[] args) {\n        A a = new A();\n    }\n}",
+  "options": [
+   "正常に実行され、何も出力されない",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する",
+   "A のデフォルト値 0 が使われて実行される"
+  ],
+  "answer": 2,
+  "explanation": "コンストラクタを1つでも明示的に定義すると、引数なしのデフォルトコンストラクタは自動生成されないため new A() はコンパイルエラーになる。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "このコードを実行したときの出力はどれか。",
+  "code": "public class Main {\n    int n = 5;\n    void Main() { n = 9; }\n    public static void main(String[] args) {\n        System.out.println(new Main().n);\n    }\n}",
+  "options": [
+   "9",
+   "コンパイルエラー",
+   "5",
+   "0"
+  ],
+  "answer": 3,
+  "explanation": "戻り値型 void が付いた Main() は通常のメソッドでありコンストラクタではないので、呼ばれず n は 5 のまま。コンパイルエラーにはならない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "このコードをコンパイルするとどうなるか。",
+  "code": "public class Main {\n    int v;\n    Main() { v = 1; this(2); }\n    Main(int v) { this.v = v; }\n    public static void main(String[] args) { }\n}",
+  "options": [
+   "正常にコンパイルされ、実行しても何も出力されない",
+   "実行時に例外が発生する",
+   "this(2) の呼び出しは無視される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "this(...) はコンストラクタ内の最初の文でなければならず、v = 1; の後に書くとコンパイルエラーになる。実行時例外にはならない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "このコードを実行したときの出力はどれか。",
+  "code": "public class Main {\n    static int count;\n    Main() { count++; }\n    public static void main(String[] args) {\n        new Main(); new Main();\n        System.out.println(count);\n    }\n}",
+  "options": [
+   "2",
+   "1",
+   "0",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "static フィールドはクラスで1つだけ共有されるため、2回の生成で 2 になる。インスタンスごとに 1 になるわけではない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "class Account {\n    private int balance = 100;\n    int get() { return balance; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Account a = new Account();\n        a.balance = 200;\n        System.out.println(a.get());\n    }\n}",
+  "options": [
+   "100",
+   "200",
+   "コンパイルエラーになる",
+   "実行時に IllegalAccessException が発生する"
+  ],
+  "answer": 3,
+  "explanation": "private フィールドは宣言したクラスの外からは直接アクセスできず、同じファイル内の別クラスでもコンパイルエラーになる。実行時例外ではなくコンパイル時に検出される。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "オーバーロードされたコンストラクタのうち、どれが呼ばれるか。実行結果として正しいものはどれか。",
+  "code": "class P {\n    String t;\n    P(long x) { t = \"long\"; }\n    P(Integer x) { t = \"Integer\"; }\n    P(Object x) { t = \"Object\"; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new P(5).t);\n    }\n}",
+  "options": [
+   "Integer",
+   "Object",
+   "コンパイルエラー",
+   "long"
+  ],
+  "answer": 4,
+  "explanation": "オーバーロード解決ではまず拡張変換(int→long)だけで合うものが選ばれ、ボクシングが必要な Integer や Object より優先される。Integer が紛らわしいが、ボクシングは後回しになる。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "このコードを実行したときの結果はどれか。",
+  "code": "class Person {\n    String name;\n    int len() { return name.length(); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Person p = new Person();\n        System.out.println(\"start\");\n        System.out.println(p.len());\n    }\n}",
+  "options": [
+   "start と 0 が出力される",
+   "start を出力した後、NullPointerException が発生する",
+   "コンパイルエラーになる",
+   "空文字の長さ 0 だけが出力される"
+  ],
+  "answer": 2,
+  "explanation": "参照型フィールドの初期値は null で、null に対して length() を呼ぶと NullPointerException になる。String の初期値は空文字ではないので 0 にはならない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "このコードを実行したときの出力はどれか。",
+  "code": "class Counter {\n    int n;\n    Counter(int n) { this.n = n; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Counter a = new Counter(1);\n        Counter b = a;\n        a = new Counter(5);\n        b.n++;\n        System.out.println(a.n + \" \" + b.n);\n    }\n}",
+  "options": [
+   "6 6",
+   "5 2",
+   "2 2",
+   "5 1"
+  ],
+  "answer": 2,
+  "explanation": "b は最初のオブジェクトを指し続け、a だけが新しいオブジェクトに付け替えられるので、b.n++ は最初のオブジェクトの n を 2 にする。a の付け替えで b も変わると考えるのが紛らわしい誤りである。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "独自コンストラクタを1つ定義したクラスを、引数なしで生成している。このコードをコンパイル・実行するとどうなるか。",
+  "code": "class Item { int n; Item(int n) { this.n = n; } }\npublic class Main {\n    public static void main(String[] args) {\n        Item b = new Item();\n        System.out.println(b.n);\n    }\n}",
+  "options": [
+   "0 が出力される",
+   "コンパイルエラーになる",
+   "NullPointerException が発生する",
+   "5 が出力される"
+  ],
+  "answer": 2,
+  "explanation": "コンストラクタを1つでも定義すると、引数なしのデフォルトコンストラクタは自動生成されないので new Item() はコンパイルエラーになる。0 になるのはフィールドの初期値の話で、呼び出せるコンストラクタがあって初めて成り立つ。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "phone",
+  "question": "フィールドとローカル変数の初期化について、このコードをコンパイルするとどうなるか。",
+  "code": "public class Main {\n    int count;\n    public static void main(String[] args) {\n        int total;\n        Main m = new Main();\n        System.out.println(m.count + total);\n    }\n}",
+  "options": [
+   "0 が出力される",
+   "count が未初期化なのでコンパイルエラー",
+   "total が未初期化なのでコンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "フィールドは自動で 0 に初期化されるが、ローカル変数 total は初期化しないと使えず、コンパイルエラーになる。count は問題ないので選択肢2は誤り。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "配列フィールドの初期値について、このコードを実行するとどうなるか。",
+  "code": "public class Main {\n    String[] names = new String[2];\n    int[] scores = new int[2];\n    int size = 2;\n\n    public static void main(String[] args) {\n        Main m = new Main();\n        System.out.println(m.size);\n        System.out.println(m.scores[1]);\n        System.out.println(m.names[0].length());\n    }\n}",
+  "options": [
+   "2、0、0 が出力されて正常終了する",
+   "2、0 が出力された後、NullPointerException が発生する",
+   "コンパイルエラーになる",
+   "最初の出力の前に ArrayIndexOutOfBoundsException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "int 配列の要素は 0、String 配列の要素は null で初期化されるため、names[0].length() で NullPointerException になる。要素数2の配列で添字 0 と 1 は範囲内なので、ArrayIndexOutOfBoundsException は起きない。"
+ },
+ {
+  "topic": "クラス・フィールド・コンストラクタ・this",
+  "kind": "deep",
+  "question": "コンストラクタ内での this(...) の位置について、このコードをコンパイルするとどうなるか。",
+  "code": "public class Main {\n    int x;\n    int y;\n    Main(int x) {\n        this.x = x;\n    }\n    Main(int x, int y) {\n        this.y = y;\n        this(x);\n    }\n    public static void main(String[] args) {\n        System.out.println(new Main(1, 2).x);\n    }\n}",
+  "options": [
+   "1 が出力される",
+   "0 が出力される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "this(...) はコンストラクタの最初の文でなければならず、this.y = y; の後に書いているのでコンパイルエラーになる。書く順番を変えれば 1 が出力されるが、このコードはその前の段階で止まる。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "class Shape {\n    String name() { return \"Shape\"; }\n}\nclass Circle extends Shape {\n    String name() { return super.name() + \"-C\"; }\n}\npublic class Main {\n    public static void main(String[] args) { System.out.println(new Circle().name()); }\n}",
+  "options": [
+   "C",
+   "Shape",
+   "Shape-C",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "super.name() で親クラスのメソッドを呼ぶので \"Shape\" + \"-C\" になる。\"C\" だけにならないのは、親の結果に連結しているため。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Base {\n    int size() { return 1; }\n}\nclass Sub extends Base {\n    long size() { return 2; }\n}\npublic class Main {\n    public static void main(String[] args) { System.out.println(new Sub().size()); }\n}",
+  "options": [
+   "コンパイルエラーになる",
+   "1",
+   "2",
+   "ClassCastException"
+  ],
+  "answer": 1,
+  "explanation": "オーバーライドでは戻り値の型は同じか共変(サブタイプ)でなければならず、int に対して long は不可なのでコンパイルエラー。2が出力されるように見えるが、そもそもコンパイルが通らない。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Parent {\n    Parent(int x) { }\n}\nclass Child extends Parent { }\npublic class Main {\n    public static void main(String[] args) {\n        new Child();\n    }\n}",
+  "options": [
+   "正常に実行され何も表示されない",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する",
+   "0が表示される"
+  ],
+  "answer": 2,
+  "explanation": "Child に明示的なコンストラクタがないと暗黙の super() が挿入されるが、Parent には引数なしコンストラクタがないのでコンパイルエラー。実行時例外ではなくコンパイル時に検出される。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "class Animal { }\nclass Dog extends Animal { }\nclass Cat extends Animal { }\npublic class Main {\n    public static void main(String[] args) {\n        Animal a = new Cat();\n        Dog d = (Dog) a;\n    }\n}",
+  "options": [
+   "正常終了し何も表示されない",
+   "コンパイルエラーになる",
+   "NullPointerException",
+   "ClassCastException"
+  ],
+  "answer": 4,
+  "explanation": "Animal から Dog へのキャストはコンパイルは通るが、実体は Cat なので実行時に ClassCastException になる。コンパイルエラーにならないのは、Animal と Dog が継承関係にあるため。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードを実行した結果、各行の出力をカンマ区切りで並べたものはどれか。",
+  "code": "class Base {\n    Base(String s) {\n        System.out.println(\"Base \" + s);\n    }\n}\nclass Mid extends Base {\n    Mid() {\n        super(\"m\");\n        System.out.println(\"Mid\");\n    }\n}\nclass Leaf extends Mid {\n    Leaf() { System.out.println(\"Leaf\"); }\n}\npublic class Main {\n    public static void main(String[] args) { new Leaf(); }\n}",
+  "options": [
+   "Leaf, Mid, Base m",
+   "Base m, Leaf, Mid",
+   "コンパイルエラー",
+   "Base m, Mid, Leaf"
+  ],
+  "answer": 4,
+  "explanation": "コンストラクタは親から順に実行され、Leaf の暗黙の super() で Mid、Mid の super(\"m\") で Base が先に実行される。子から順にはならない。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "class Parent {\n    void show(Object o) {\n        System.out.println(\"obj\");\n    }\n}\nclass Child extends Parent {\n    void show(String s) {\n        System.out.println(\"str\");\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Parent p = new Child();\n        p.show(\"x\");\n    }\n}",
+  "options": [
+   "obj",
+   "str",
+   "コンパイルエラー",
+   "ClassCastException"
+  ],
+  "answer": 1,
+  "explanation": "Child の show(String) は引数型が違うのでオーバーロードであり、オーバーライドではない。Parent 型の変数からは show(Object) しか見えないので obj になる。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Base {\n    void print(int x) {\n        System.out.println(\"int\");\n    }\n}\nclass Sub extends Base {\n    @Override\n    void print(long x) {\n        System.out.println(\"long\");\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        new Sub().print(1);\n    }\n}",
+  "options": [
+   "long",
+   "int",
+   "コンパイルエラー",
+   "何も出力されない"
+  ],
+  "answer": 3,
+  "explanation": "print(long) は親の print(int) とシグネチャが違い、オーバーライドになっていないので @Override でコンパイルエラーになる。オーバーロードなら int が出るはずだが、@Override があるため通らない。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "class Base {\n    Base() {\n        init();\n    }\n    void init() {\n        System.out.println(\"base\");\n    }\n}\nclass Sub extends Base {\n    int n = 5;\n    void init() {\n        System.out.println(\"n=\" + n);\n    }\n}\npublic class Main {\n    public static void main(String[] args) { new Sub(); }\n}",
+  "options": [
+   "n=5",
+   "n=0",
+   "base",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "Base のコンストラクタ内の init() はオーバーライドされた Sub 版が呼ばれるが、Sub のフィールド n はまだ初期化前で 0 のため n=0 になる。n=5 にならないのは、親のコンストラクタが先に実行されるため。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class A { final void f() { System.out.println(\"A\"); } }\nclass B extends A { void f() { System.out.println(\"B\"); } }\npublic class Main {\n    public static void main(String[] args) {\n        new B().f();\n    }\n}",
+  "options": [
+   "A",
+   "B",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "final メソッドはオーバーライドできないため、B の f() でコンパイルエラーになる。「B」と出力されると考えるのは、final を見落とした場合の誤り。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Item { Item(int id) { } }\nclass Book extends Item { }\npublic class Main {\n    public static void main(String[] args) {\n        new Book();\n    }\n}",
+  "options": [
+   "何も出力せず正常に終了する",
+   "実行時に例外が発生する",
+   "コンパイルエラーになる",
+   "Item の引数なしコンストラクタが自動生成されるので問題ない"
+  ],
+  "answer": 3,
+  "explanation": "Book のデフォルトコンストラクタは super() を呼ぶが、Item には引数なしコンストラクタがないのでコンパイルエラーになる。Item(int) があると引数なしが自動生成されない点が紛らわしい。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Animal { }\nclass Dog extends Animal { void bark() { System.out.println(\"Woof\"); } }\npublic class Main {\n    public static void main(String[] args) {\n        Animal a = new Dog();\n        a.bark();\n    }\n}",
+  "options": [
+   "Woof",
+   "実行時に ClassCastException が発生する",
+   "何も出力されない",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "メソッド呼び出しの可否は変数の型(Animal)で決まり、Animal に bark() はないのでコンパイルエラー。実体が Dog でも、コンパイル時には考慮されない。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "class A { void f(Object o) { System.out.println(\"obj\"); } }\nclass B extends A { void f(String s) { System.out.println(\"str\"); } }\npublic class Main {\n    public static void main(String[] args) {\n        A a = new B();\n        a.f(\"x\");\n    }\n}",
+  "options": [
+   "str",
+   "obj",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "B の f(String) は引数型が違うのでオーバーライドではなくオーバーロード。変数型 A には f(Object) しか見えないため、A の f が実行され obj と出力される。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "class Base {\n    Base() { show(); }\n    void show() { System.out.println(\"Base\"); }\n}\nclass Sub extends Base {\n    int n = 5;\n    void show() { System.out.println(\"n=\" + n); }\n}\npublic class Main {\n    public static void main(String[] args) { new Sub(); }\n}",
+  "options": [
+   "Base",
+   "n=5",
+   "n=0",
+   "コンパイルエラーになる"
+  ],
+  "answer": 3,
+  "explanation": "親のコンストラクタ実行時点では Sub のフィールド n はまだ初期化されておらず 0 のままなので、オーバーライドされた show() が n=0 と出力する。n=5 は初期化の順序を誤った選択肢。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class A {\n    Number get() { return 1; }\n}\nclass B extends A {\n    Integer get() { return 2; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        A a = new B();\n        System.out.println(a.get());\n    }\n}",
+  "options": [
+   "1",
+   "2",
+   "コンパイルエラーになる(戻り値型が違うため)",
+   "実行時に ClassCastException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "Integer は Number のサブクラスなので共変戻り値として正しくオーバーライドでき、実体の B の get() が呼ばれて 2 になる。戻り値型が違うとエラーという選択肢は、共変戻り値を知らない場合の誤り。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Task {\n    void run() { System.out.println(\"task\"); }\n}\nclass Job extends Task {\n    void run() throws Exception {\n        System.out.println(\"job\");\n    }\n}\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        new Job().run();\n    }\n}",
+  "options": [
+   "job",
+   "task",
+   "実行時に Exception が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "オーバーライドするメソッドは、親が宣言していない検査例外を throws に加えられないため Job の run() でコンパイルエラー。main に throws があっても、この問題は解消されない。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "class A {\n    private String name() { return \"A\"; }\n    String show() { return name(); }\n}\nclass B extends A {\n    String name() { return \"B\"; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new B().show());\n    }\n}",
+  "options": [
+   "A",
+   "B",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 1,
+  "explanation": "private メソッドは子クラスから見えずオーバーライドされないので、A の show() 内の name() は A 自身のものが呼ばれ A となる。B と考えるのは、オーバーライドされたと誤解した場合。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "public class Main {\n    static class Pen {\n        String color() { return \"black\"; }\n        String show() { return color(); }\n    }\n    static class RedPen extends Pen {\n        String color() { return \"red\"; }\n    }\n    public static void main(String[] args) {\n        System.out.println(new RedPen().show());\n    }\n}",
+  "options": [
+   "black",
+   "red",
+   "blackred",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "show() は Pen のメソッドだが、color() の呼び出しは実際のオブジェクト(RedPen)のオーバーライド版が選ばれるので red になる。black と考えるのは、メソッドが親クラスで定義されていると勘違いした場合の誤り。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Account {\n        protected int balance;\n        Account(int balance) {\n            this.balance = balance;\n            System.out.println(\"Account:\" + balance);\n        }\n    }\n    static class Savings extends Account {\n        Savings() {\n            super(100);\n            balance += 50;\n            System.out.println(\"Savings:\" + balance);\n        }\n    }\n    public static void main(String[] args) {\n        new Savings();\n    }\n}",
+  "options": [
+   "Account:100 と Savings:150 が順に表示される",
+   "Savings:150 と Account:100 が順に表示される",
+   "Account:0 と Savings:150 が順に表示される",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "子のコンストラクタはまず super(100) で親を実行して Account:100 を出し、その後 balance が150になり Savings:150 が出る。順序が逆の選択肢は、親の初期化が先に行われるルールを無視している。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "phone",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "public class Main {\n    static class Pet {\n        String sound() { return \"...\"; }\n    }\n    static class Cat extends Pet {\n        String sound() { return \"meow\"; }\n    }\n    public static void main(String[] args) {\n        Pet p = new Cat();\n        System.out.println(p.sound());\n    }\n}",
+  "options": [
+   "...",
+   "meow",
+   "コンパイルエラー",
+   "ClassCastException"
+  ],
+  "answer": 2,
+  "explanation": "オーバーライドされたメソッドは、変数の型ではなく実際のオブジェクト(Cat)のものが呼ばれるので meow。変数型 Pet の \"...\" になると考えるのは誤り。"
+ },
+ {
+  "topic": "継承・super・オーバーライド",
+  "kind": "deep",
+  "question": "次のコードを実行した結果はどれか。",
+  "code": "public class Main {\n    static class Account {\n        protected int balance = 100;\n        int total(int fee) {\n            return balance - fee;\n        }\n    }\n    static class Savings extends Account {\n        int total(int fee) {\n            return super.total(fee) + 10;\n        }\n    }\n    public static void main(String[] args) {\n        Account a = new Savings();\n        System.out.println(a.total(5));\n    }\n}",
+  "options": [
+   "95",
+   "105",
+   "90",
+   "110"
+  ],
+  "answer": 2,
+  "explanation": "super.total(5) は 100-5=95 を返し、Savings側で+10して 105。95 は super 呼び出し後の加算を忘れた誤り。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Box {\n    private int base() { return 5; }\n    default int get() { return base() * 2; }\n}\npublic class Main {\n    public static void main(String[] a) { System.out.println(new Box() {}.get()); }\n}",
+  "options": [
+   "5",
+   "10",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "private メソッドは同じインターフェイス内の default メソッドから呼べるので 5*2=10 になります。「5」は get() が base() をそのまま返すと勘違いした場合の答えです。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Mth {\n    private static int sq(int n) { return n * n; }\n    static int sumSq(int a, int b) { return sq(a) + sq(b); }\n}\npublic class Main {\n    public static void main(String[] x) { System.out.println(Mth.sumSq(2, 3)); }\n}",
+  "options": [
+   "5",
+   "12",
+   "13",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "private static メソッドは同じインターフェイスの static メソッドから呼べ、4+9=13 です。コンパイルエラーになるのは private static が許されないと誤解した場合です。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Id {\n    private String tag() { return \"id\"; }\n    default String name() { return tag() + \"1\"; }\n}\npublic class Main {\n    public static void main(String[] a) { Id d = new Id() {}; System.out.println(d.tag()); }\n}",
+  "options": [
+   "id",
+   "id1",
+   "実行時に例外が発生する",
+   "コンパイルエラー"
+  ],
+  "answer": 4,
+  "explanation": "インターフェイスの private メソッドは外部から呼べず、Main の d.tag() はコンパイルエラーです。「id1」は name() を呼んだ場合の結果で、ここでは呼んでいません。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Hello { default String say() { return \"hello\"; } }\npublic class Main implements Hello {\n    public String say() { return Hello.super.say() + \"!\"; }\n    public static void main(String[] a) { System.out.println(new Main().say()); }\n}",
+  "options": [
+   "hello",
+   "hello!",
+   "!",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "Hello.super.say() でインターフェイスの default 実装を呼べるので \"hello\" に \"!\" が付きます。「hello」だけになるのはクラス側の上書きを無視した場合です。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Shape {\n    static String info() { return \"shape\"; }\n}\nclass Circle implements Shape {\n    static String info() { return \"circle\"; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(Shape.info());\n        System.out.println(Circle.info());\n    }\n}",
+  "options": [
+   "shape, shape",
+   "circle, circle",
+   "shape, circle",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "インターフェイスの static メソッドは実装クラスに継承されないので、Circle の info() は無関係な別メソッドで、それぞれ呼ばれます。コンパイルエラーを選ぶのは、同名 static の上書き衝突と誤解した場合です。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Base {\n    default String id() { return \"Base\"; }\n}\ninterface Child extends Base {\n    default String id() { return \"Child\"; }\n}\nclass Impl implements Base, Child { }\npublic class Main {\n    public static void main(String[] args) {\n        Base b = new Impl();\n        System.out.println(b.id());\n    }\n}",
+  "options": [
+   "Base",
+   "Child",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "Child が Base の default を上書きしているため、より具体的な Child の実装が使われます。変数の型が Base でも、実行時のオブジェクトで決まるので「Base」にはなりません。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果として、各行の出力をカンマ区切りで並べたものはどれか。",
+  "code": "interface Price {\n    int base();\n    default int withTax() { return add(base(), 10); }\n    default int withFee() { return add(base(), 3); }\n    private int add(int x, int rate) { return x + x * rate / 100; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Price p = new Price() { public int base() { return 200; } };\n        System.out.println(p.withTax());\n        System.out.println(p.withFee());\n    }\n}",
+  "options": [
+   "210, 203",
+   "220, 206",
+   "220, 203",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "200+200*10/100=220、200+200*3/100=206 で、共通処理を private メソッド add にまとめられます。コンパイルエラーを選ぶのは、default から private を呼べないと誤解した場合です。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Counter {\n    static int step() { return 2; }\n    default int next(int n) { return n + step(); }\n}\nclass Simple implements Counter { }\npublic class Main {\n    public static void main(String[] args) {\n        Counter c = new Simple();\n        int r = c.next(1);\n        System.out.println(r + \" \" + Counter.step());\n    }\n}",
+  "options": [
+   "3 2",
+   "1 2",
+   "2 2",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "default メソッド内からは同じインターフェイスの static メソッドを修飾なしで呼べ、1+2=3 で、Counter.step() は 2 です。コンパイルエラーを選ぶのは、default から static を呼べないと誤解した場合です。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    interface Cal { static int one() { return 1; } }\n    static class Impl implements Cal { }\n    public static void main(String[] args) {\n        Impl i = new Impl();\n        System.out.println(i.one());\n    }\n}",
+  "options": [
+   "1 と出力される",
+   "0 と出力される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "インターフェイスの static メソッドはインスタンス参照では呼べず、Cal.one() のようにインターフェイス名で呼ぶ必要がある。実行時例外ではなくコンパイル時に弾かれる点が紛らわしい。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    interface Say {\n        private String pre() { return \"Hi-\"; }\n        default String go(String s) { return pre() + s; }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Say() {}.go(\"A\"));\n    }\n}",
+  "options": [
+   "A",
+   "Hi-A",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "private メソッドは同じインターフェイス内の default メソッドから呼べるので、Hi-A となる。private だからコンパイルエラーと考えるのは誤りで、使えないのは外部のクラスからである。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    interface Pk { private void hid() { System.out.println(\"x\"); } }\n    static class Q implements Pk {\n        void t() { hid(); }\n    }\n    public static void main(String[] args) { new Q().t(); }\n}",
+  "options": [
+   "x と出力される",
+   "何も出力されない",
+   "実行時に例外が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "インターフェイスの private メソッドは実装クラスに継承されず、Q の中から hid() は呼べないのでコンパイルエラーになる。public ではないが同じ Main 内だから呼べる、というわけではない。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "インターフェイスのメソッドに関する記述として正しいものはどれか。",
+  "code": null,
+  "options": [
+   "private static メソッドを定義でき、同じインターフェイスの static メソッドから呼び出せる",
+   "private メソッドは abstract にできる",
+   "default メソッドは static を併用できる",
+   "private メソッドはサブインターフェイスから呼び出せる"
+  ],
+  "answer": 1,
+  "explanation": "Java 9 以降は private static メソッドを定義でき、同じインターフェイス内の static メソッドなどから使える。private メソッドは本体が必須かつ継承されないので、abstract にもサブインターフェイスからの呼び出しもできない。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    interface Parent {\n        static String name() {\n            return \"parent\";\n        }\n    }\n    interface Child extends Parent {\n    }\n    public static void main(String[] args) {\n        System.out.println(Parent.name());\n        System.out.println(Child.name());\n    }\n}",
+  "options": [
+   "parent と2回出力される",
+   "1行目だけ parent と出力され、2行目で実行時例外が発生する",
+   "コンパイルエラーになる",
+   "何も出力されずに終了する"
+  ],
+  "answer": 3,
+  "explanation": "インターフェイスの static メソッドはサブインターフェイスに継承されないため、Child.name() は解決できずコンパイルエラーになる。クラスの static メソッドのように継承されると考えるのが典型的な誤り。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    interface Figure {\n        double area();\n        default String describe() {\n            return \"area=\" + area();\n        }\n    }\n    static class Sq implements Figure {\n        public double area() { return 4; }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Sq().describe());\n    }\n}",
+  "options": [
+   "area=4",
+   "area=4.0",
+   "area=0.0",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "default メソッド内の area() は実装クラス Sq の実装が呼ばれ、戻り値は double なので 4.0 と連結される。area=4 と思いがちだが double の文字列化では 4.0 になる。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    interface Base {\n        default String id() { return \"base\"; }\n    }\n    interface Sub extends Base {\n        String id();\n    }\n    static class Impl implements Sub {\n    }\n    public static void main(String[] args) {\n        Sub s = new Impl();\n        System.out.println(s.id());\n    }\n}",
+  "options": [
+   "base と出力される",
+   "null と出力される",
+   "実行時に AbstractMethodError が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "Sub が id() を抽象メソッドとして再宣言したので、Impl は実装を持たなければならず、実装がないためコンパイルエラーになる。Base の default が使われると思うのは誤りで、Sub の再宣言がそれを打ち消す。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    interface Swim {\n        default void move() { System.out.println(\"swim\"); }\n    }\n    interface Fly {\n        default void move() { System.out.println(\"fly\"); }\n    }\n    static class Duck implements Swim, Fly {\n        public void move() {\n            Swim.super.move();\n            Fly.super.move();\n        }\n    }\n    public static void main(String[] args) { new Duck().move(); }\n}",
+  "options": [
+   "swim と fly が順に1行ずつ出力される",
+   "swim だけが出力される",
+   "fly だけが出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "同名の default が衝突しても、クラス側でオーバーライドし インターフェイス名.super.メソッド名() で明示すればよく、記述順に swim、fly と出力される。衝突するからエラーというのは、オーバーライドしない場合の話である。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "phone",
+  "question": "次のコードを実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    interface Pet {\n        private String sound() { return \"woof\"; }\n        default String speak() { return sound() + \"!\"; }\n    }\n    public static void main(String[] args) {\n        Pet p = new Pet() {};\n        System.out.println(p.speak());\n    }\n}",
+  "options": [
+   "woof!",
+   "woof",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 1,
+  "explanation": "privateメソッドは同じインターフェイス内のdefaultメソッドから呼べるので「woof!」と出力される。「woof」だけにはならず、speak()が!を付け足す。"
+ },
+ {
+  "topic": "インターフェイス(default/static/private)",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として正しいものはどれか。",
+  "code": "public class Main {\n    interface Walker {\n        default String move() { return \"walk\"; }\n    }\n    interface Swimmer {\n        default String move() { return \"swim\"; }\n    }\n    static class Duck implements Walker, Swimmer {\n        public String move() {\n            return Walker.super.move() + \"+\" + Swimmer.super.move();\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Duck().move());\n    }\n}",
+  "options": [
+   "walk+swim",
+   "swim+walk",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 1,
+  "explanation": "同名のdefaultメソッドが衝突しても、クラス側でオーバーライドし「インターフェイス名.super.メソッド()」で呼び分ければ「walk+swim」になる。オーバーライドしなければコンパイルエラーだが、ここでは解消されている。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "次のコードを実行したときの結果はどれか。",
+  "code": "public class Main {\n    record User(String name) {}\n    public static void main(String[] args) {\n        User u = new User(\"Ann\");\n        System.out.println(u.name);\n    }\n}",
+  "options": [
+   "Ann",
+   "コンパイルエラーになる",
+   "User[name=Ann]",
+   "実行時に例外が発生する"
+  ],
+  "answer": 1,
+  "explanation": "recordのフィールドはprivateだが、同じ外側クラスMainの中にあるので u.name で直接アクセスできる。コンパイルエラーになるという選択肢は、privateだから外からは見えないと誤解した場合の答えである。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "recordの性質として正しいものはどれか。",
+  "code": null,
+  "options": [
+   "他のクラスを extends できる",
+   "暗黙的に final なので継承されない",
+   "setterメソッドが自動生成される",
+   "暗黙的に abstract になる"
+  ],
+  "answer": 2,
+  "explanation": "recordは暗黙的にfinalクラスで、他のクラスから継承できない。setterは生成されず、フィールドはfinalで変更できない。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行するとどうなるか。",
+  "code": "public class Main {\n    record P(int x) {\n        P { this.x = x; }\n    }\n    public static void main(String[] args) {\n        System.out.println(new P(1).x());\n    }\n}",
+  "options": [
+   "1が出力される",
+   "0が出力される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "コンパクトコンストラクタ内では this.x への代入はできず、コンパイルエラーになる。フィールドへの代入は末尾で自動的に行われる。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "次のコードの出力はどれか。",
+  "code": "public class Main {\n    record Id(int v) {\n        static Id zero() { return new Id(0); }\n    }\n    public static void main(String[] args) {\n        System.out.println(Id.zero());\n    }\n}",
+  "options": [
+   "Id@0",
+   "Id[0]",
+   "0",
+   "Id[v=0]"
+  ],
+  "answer": 4,
+  "explanation": "recordのtoStringは「型名[コンポーネント名=値]」の形式になるので Id[v=0] になる。Id@0 のようなハッシュ形式にはならない。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "次のコードを実行したときの各行の出力を「 / 」で区切って並べたものはどれか。",
+  "code": "public class Main {\n    record Pair(String a, int b) {}\n    public static void main(String[] args) {\n        Pair p1 = new Pair(\"x\", 1);\n        Pair p2 = new Pair(\"x\", 1);\n        System.out.println(p1 == p2);\n        System.out.println(p1.equals(p2));\n        System.out.println(p1.hashCode() == p2.hashCode());\n    }\n}",
+  "options": [
+   "false / true / true",
+   "true / true / true",
+   "false / false / true",
+   "false / true / false"
+  ],
+  "answer": 1,
+  "explanation": "== は別オブジェクトなのでfalse、equalsは全コンポーネントが等しければtrue、等しいrecordのhashCodeも一致してtrueになる。equalsがfalseになるのは参照比較と混同した場合である。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "次のコードを実行したときの各行の出力を「 / 」で区切って並べたものはどれか。",
+  "code": "public class Main {\n    record Name(String value) {\n        Name {\n            value = value.trim().toUpperCase();\n        }\n    }\n    public static void main(String[] args) {\n        Name n = new Name(\"  bob \");\n        System.out.println(n.value());\n        System.out.println(n);\n    }\n}",
+  "options": [
+   "BOB / Name[value=BOB]",
+   "bob / Name[value=bob]",
+   "BOB / Name[value=  bob ]",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "コンパクトコンストラクタ内ではパラメータ value を書き換えられ、その値が最後にフィールドへ代入されるので両方とも BOB になる。toStringだけ元の値になることはない。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "次のコードを実行したときの結果はどれか。",
+  "code": "public class Main {\n    record Age(int years) {\n        Age {\n            if (years < 0) {\n                throw new IllegalArgumentException(\"neg\");\n            }\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Age(5));\n        System.out.println(new Age(-1));\n    }\n}",
+  "options": [
+   "Age[years=5] と Age[years=-1] を出力する",
+   "コンパイルエラーになる",
+   "Age[years=5] を出力した後、IllegalArgumentException が発生する",
+   "何も出力せず IllegalArgumentException が発生する"
+  ],
+  "answer": 3,
+  "explanation": "1つ目は検査を通って出力され、2つ目の生成時にコンストラクタが例外を投げて終了する。何も出力されないわけではなく、1行目は先に出力される。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行するとどうなるか。",
+  "code": "public class Main {\n    record Box(int w, int h) {\n        Box(int s) {\n            w = s;\n            h = s;\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(new Box(3));\n    }\n}",
+  "options": [
+   "Box[w=3, h=3]",
+   "Box[w=3, h=0]",
+   "実行時に例外が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "正規コンストラクタ以外のコンストラクタは最初に this(...) で別のコンストラクタを呼ぶ必要があり、直接フィールドへ代入するとコンパイルエラーになる。Box(3,3) と書けば動く形だが、この書き方は不可である。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "public class Main {\n    record User(String name) {\n        int age;\n    }\n    public static void main(String[] args) {\n        System.out.println(new User(\"A\"));\n    }\n}",
+  "options": [
+   "nameだけが使われて正常に実行される",
+   "User[name=A]と表示される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "recordにはインスタンスフィールドを追加で宣言できないため、コンパイルエラーになる。2は、フィールド宣言がなければ正しい出力になるが、この宣言があるので実行までたどり着かない。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "record Id(int v) { static int count = 5; }\npublic class Main {\n    public static void main(String[] args) {\n        Id.count++;\n        System.out.println(Id.count + new Id(5).v());\n    }\n}",
+  "options": [
+   "6",
+   "11",
+   "10",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "recordにstaticフィールドは宣言でき、変更もできる。count++で6になり、6+5=11と加算される。1は、v()の5を足し忘れた値。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "class Base { }\nrecord Dog(String name) extends Base { }\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new Dog(\"a\"));\n    }\n}",
+  "options": [
+   "Dog[name=a]と表示される",
+   "Baseのメソッドが継承されて正常に実行される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "recordは暗黙にjava.lang.Recordを継承しているため、extendsで別のクラスを継承できずコンパイルエラーになる。1は、extendsがなければ正しい出力になるが、ここでは不可。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "record Tag(String s) { }\npublic class Main {\n    public static void main(String[] args) {\n        Tag t = new Tag(null);\n        System.out.println(t);\n    }\n}",
+  "options": [
+   "Tag[s=null]",
+   "Tag[null]",
+   "NullPointerExceptionが発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "recordの自動生成toStringは「型名[成分名=値]」の形式で、nullもそのまま表示される。2は成分名が省略されているので誤り。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    record Account(String name, int balance) {\n        Account {\n            if (balance < 0) {\n                balance = 0;\n            }\n            name = name.toUpperCase();\n        }\n    }\n    public static void main(String[] args) {\n        Account a = new Account(\"bob\", -50);\n        System.out.println(a.name() + \" \" + a.balance());\n    }\n}",
+  "options": [
+   "bob -50",
+   "BOB 0",
+   "BOB -50",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "コンパクトコンストラクタ内でパラメータを書き換えると、その値が最後にフィールドへ代入されるので「BOB 0」になる。1は書き換えが反映されないと考えた誤り。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "public class Main {\n    record Size(int w, int h) {\n        Size(int w) {\n            this.w = w;\n            this.h = w;\n        }\n    }\n    public static void main(String[] args) {\n        Size s = new Size(4);\n        System.out.println(s.w() + \"x\" + s.h());\n    }\n}",
+  "options": [
+   "4x4と表示される",
+   "4x0と表示される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "正規コンストラクタ以外のコンストラクタは、最初にthis(...)で別のコンストラクタを呼ぶ必要があり、直接フィールドへ代入できないためコンパイルエラー。1は通常のクラスの感覚での誤り。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    record Person(String name, int age) {\n        int age() {\n            return age + 1;\n        }\n    }\n    public static void main(String[] args) {\n        Person p = new Person(\"Ann\", 20);\n        System.out.println(p.age());\n    }\n}",
+  "options": [
+   "21",
+   "20",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "アクセサメソッドを明示的に宣言する場合はpublicにしなければならず、修飾子なしではコンパイルエラーになる。1は、publicを付けた場合の結果。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "import java.util.*;\npublic class Main {\n    record Team(String name, List<String> members) { }\n    public static void main(String[] args) {\n        List<String> list = new ArrayList<>();\n        list.add(\"A\");\n        Team t = new Team(\"X\", list);\n        list.add(\"B\");\n        System.out.println(t.members().size());\n        System.out.println(t.members());\n    }\n}",
+  "options": [
+   "1 / [A]",
+   "2 / [A, B]",
+   "2 / [B]",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "recordのフィールドはfinalだが参照先は同じListなので、後から追加した要素も見えて2と[A, B]になる。1は、recordの中身が自動でコピーされるという誤解。"
+ },
+ {
+  "topic": "record",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    record Pair(String a, String b) { }\n    public static void main(String[] args) {\n        Pair p = new Pair(\"X\", \"Y\");\n        System.out.println(p.b() + p.a());\n    }\n}",
+  "options": [
+   "XY",
+   "YX",
+   "Pair[a=Y, b=X]",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "recordのアクセサは b() と a() で、呼び出し順に「Y」「X」が連結され YX になる。getB() のような名前ではない点が紛らわしい。"
+ },
+ {
+  "topic": "record",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    record Account(String owner, int balance) {\n        Account {\n            if (balance < 0) {\n                balance = 0;\n            }\n        }\n    }\n    public static void main(String[] args) {\n        Account a = new Account(\"Sato\", -50);\n        Account b = new Account(\"Sato\", 0);\n        System.out.println(a.balance());\n        System.out.println(a.equals(b));\n        System.out.println(a);\n    }\n}",
+  "options": [
+   "-50 / false / Account[owner=Sato, balance=-50]",
+   "0 / true / Account[owner=Sato, balance=0]",
+   "0 / false / Account[owner=Sato, balance=0]",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "コンパクトコンストラクタ内では引数を書き換えられ、その値がフィールドに代入されるため balance は0になり、equalsも全成分が等しいので true になる。-50のままだと考えるのが紛らわしいが、代入は本体の後に行われる。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のうち、検査例外(checked exception)であるものはどれか。",
+  "code": null,
+  "options": [
+   "ArithmeticException",
+   "IllegalStateException",
+   "java.io.IOException",
+   "NullPointerException"
+  ],
+  "answer": 3,
+  "explanation": "IOException は Exception のサブクラスで RuntimeException ではないため検査例外で、処理(catch か throws)が必須。IllegalStateException は RuntimeException の子なので非検査例外。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        int[] n = new int[2];\n        try { n[2] = 1; }\n        catch (ArithmeticException e) { System.out.println(\"A\"); }\n        finally { System.out.println(\"F\"); }\n    }\n}",
+  "options": [
+   "A が出力される",
+   "F が出力された後、ArrayIndexOutOfBoundsException で異常終了する",
+   "何も出力されず ArrayIndexOutOfBoundsException で異常終了する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "n[2] は範囲外で ArrayIndexOutOfBoundsException が発生し、catch に合わないので finally だけ実行されてから例外が伝播する。3 は finally が実行される点が誤り。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static void load() throws Exception { }\n    public static void main(String[] args) {\n        load();\n        System.out.println(\"ok\");\n    }\n}",
+  "options": [
+   "ok と出力される",
+   "コンパイルエラーになる",
+   "実行時に Exception が発生する",
+   "何も出力されず正常終了する"
+  ],
+  "answer": 2,
+  "explanation": "load() は検査例外 Exception を throws しており、呼び出し側が try-catch も throws もしていないのでコンパイルエラー。実際に投げられるかどうかは関係ない。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "import java.io.IOException;\npublic class Main {\n    public static void main(String[] args) {\n        try { System.out.println(\"a\"); }\n        catch (IOException e) { System.out.println(\"b\"); }\n    }\n}",
+  "options": [
+   "a",
+   "b",
+   "a と b が順に出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "try ブロック内で IOException が投げられる可能性がない検査例外を catch するとコンパイルエラーになる。1 は RuntimeException 系なら通るが、検査例外では通らない。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static int calc() {\n        int x = 1;\n        try {\n            x = 2;\n            return x;\n        } finally {\n            x = 3;\n            System.out.println(\"x=\" + x);\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(calc());\n    }\n}",
+  "options": [
+   "x=3 と 2 が順に出力される",
+   "x=3 と 3 が順に出力される",
+   "2 だけが出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "return の時点で戻り値 2 が確定し、その後 finally で x を変えても戻り値は変わらない。finally 内の出力が先に行われるので x=3、2 の順。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try {\n            try {\n                throw new IllegalStateException(\"a\");\n            } catch (IllegalStateException e) {\n                throw new RuntimeException(\"b\");\n            } finally {\n                System.out.println(\"f1\");\n            }\n        } catch (RuntimeException e) {\n            System.out.println(\"c2 \" + e.getMessage());\n        }\n    }\n}",
+  "options": [
+   "c2 a",
+   "f1 と c2 b が順に出力される",
+   "c2 b と f1 が順に出力される",
+   "f1 が出力された後、RuntimeException で異常終了する"
+  ],
+  "answer": 2,
+  "explanation": "内側の catch で投げた RuntimeException は、内側の finally を実行してから外側の catch に渡るので f1、c2 b の順。3 は finally が外側の catch より先に実行される点が誤り。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static void recurse(int n) { recurse(n + 1); }\n    public static void main(String[] args) {\n        try {\n            recurse(0);\n        } catch (Exception e) {\n            System.out.println(\"E\");\n        } finally {\n            System.out.println(\"F\");\n        }\n    }\n}",
+  "options": [
+   "E と F が順に出力される",
+   "E だけが出力される",
+   "F が出力された後、StackOverflowError で異常終了する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 3,
+  "explanation": "無限再帰で発生する StackOverflowError は Error のサブクラスで Exception ではないため catch されず、finally だけ実行されて異常終了する。1 は Error を Exception で捕まえられると誤解した選択肢。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        String s = null;\n        try {\n            System.out.println(s.length());\n        } catch (NullPointerException | RuntimeException e) {\n            System.out.println(\"caught\");\n        }\n        System.out.println(\"end\");\n    }\n}",
+  "options": [
+   "caught と end が順に出力される",
+   "end だけが出力される",
+   "NullPointerException で異常終了する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "マルチキャッチでは継承関係にある型(NullPointerException と、その親の RuntimeException)を並べるとコンパイルエラーになる。1 は実行できた場合の挙動で、コンパイルが通らないので誤り。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try { System.out.println(\"a\"); }\n        catch (Exception e) { System.out.println(\"b\"); }\n        catch (RuntimeException e) { System.out.println(\"c\"); }\n    }\n}",
+  "options": [
+   "a",
+   "b",
+   "コンパイルエラー",
+   "c"
+  ],
+  "answer": 3,
+  "explanation": "親クラスのExceptionを先に書くと、後ろのRuntimeExceptionのcatchは到達不能でコンパイルエラーになる。実行結果が「a」になると考えがちだが、コンパイルが通らないので実行されない。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のうち、catchもthrowsも書かなくてもコンパイルエラーにならない(非検査の)例外・エラーはどれか。",
+  "code": null,
+  "options": [
+   "FileNotFoundException",
+   "InterruptedException",
+   "ClassNotFoundException",
+   "StackOverflowError"
+  ],
+  "answer": 4,
+  "explanation": "Errorとそのサブクラス、およびRuntimeExceptionとそのサブクラスは非検査で、処理を強制されない。他の3つはExceptionの系統でRuntimeExceptionではないので検査例外である。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try { String s = null; s.length(); }\n        finally { System.out.println(\"F\"); }\n    }\n}",
+  "options": [
+   "Fと出力されて正常終了する",
+   "Fと出力された後、NullPointerExceptionで異常終了する",
+   "何も出力されずNullPointerExceptionで異常終了する",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "catchが無くても、例外が発生した場合にfinallyは必ず実行されるのでFが出力され、その後に例外が呼び出し元へ伝わって異常終了する。finallyが実行されないと考えるのが紛らわしい誤り。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "import java.io.*;\npublic class Main {\n    public static void main(String[] args) {\n        try { throw new IOException(); }\n        catch (FileNotFoundException | IOException e) { System.out.println(\"x\"); }\n    }\n}",
+  "options": [
+   "コンパイルエラー",
+   "x",
+   "何も出力されない",
+   "IOExceptionで異常終了する"
+  ],
+  "answer": 1,
+  "explanation": "マルチcatchでは継承関係にある型(FileNotFoundExceptionはIOExceptionのサブクラス)を並べられず、コンパイルエラーになる。単に「x」が出ると思うのが紛らわしいが、コンパイルが通らない。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static int calc() {\n        try {\n            throw new IllegalStateException(\"x\");\n        } catch (IllegalStateException e) {\n            return 1;\n        } finally {\n            return 2;\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(calc());\n    }\n}",
+  "options": [
+   "1",
+   "2",
+   "IllegalStateExceptionで異常終了する",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "catchのreturn 1の後でもfinallyが実行され、finally内のreturn 2が戻り値を上書きするので2が出力される。1と答えるのが紛らわしいが、finallyのreturnが優先される。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        try {\n            try {\n                throw new RuntimeException(\"first\");\n            } finally {\n                throw new IllegalStateException(\"second\");\n            }\n        } catch (RuntimeException e) {\n            System.out.println(e.getMessage());\n        }\n    }\n}",
+  "options": [
+   "first",
+   "second",
+   "null",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "finally内で新しい例外を投げると元の例外(first)は失われ、IllegalStateException(RuntimeExceptionのサブクラス)が外側のcatchに捕まるのでsecondが出力される。firstと答えるのが紛らわしい誤り。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static void load() throws Exception {\n        throw new Exception(\"fail\");\n    }\n    public static void main(String[] args) {\n        try {\n            load();\n        } catch (RuntimeException e) {\n            System.out.println(\"caught\");\n        }\n    }\n}",
+  "options": [
+   "caught",
+   "Exceptionで異常終了する",
+   "何も出力されない",
+   "コンパイルエラー"
+  ],
+  "answer": 4,
+  "explanation": "load()はExceptionを投げうる検査例外だが、catchはRuntimeExceptionだけでmainにもthrowsが無いため、未処理としてコンパイルエラーになる。実行時に異常終了すると考えるのが紛らわしいが、その前にコンパイルで失敗する。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、出力される内容はどれか。",
+  "code": "public class Main {\n    static void run(int n) {\n        try {\n            if (n == 0) throw new IllegalArgumentException();\n            System.out.println(\"ok\");\n        } catch (IllegalArgumentException e) {\n            System.out.println(\"arg\");\n        } finally {\n            System.out.println(\"fin\");\n        }\n    }\n    public static void main(String[] args) {\n        run(0);\n        run(1);\n    }\n}",
+  "options": [
+   "arg、ok、fin",
+   "arg、fin、ok",
+   "arg、fin、ok、fin(この順に4行)",
+   "arg、fin(この順に2行)"
+  ],
+  "answer": 3,
+  "explanation": "run(0)は例外でcatchのargの後にfinallyでfin、run(1)は例外が出ずokの後にfinが出力される。finallyは例外の有無にかかわらず毎回実行されるので、finが1回だけではない。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] a) {\n        try { throw new RuntimeException(); }\n        catch (RuntimeException e) { throw new IllegalStateException(); }\n        finally { System.out.println(\"F\"); }\n    }\n}",
+  "options": [
+   "F が出力された後、IllegalStateException で異常終了する",
+   "F は出力されず、IllegalStateException で異常終了する",
+   "F が出力され、正常終了する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "catch内で例外が投げられても finally は必ず実行されるため F が出力され、その後 IllegalStateException が呼び出し元へ伝わる。2は「finally が実行されない」と誤解した選択肢で、finally は例外が出ても動く。"
+ },
+ {
+  "topic": "例外の種類(checked/unchecked)・try-catch-finally",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static int calc() {\n        int n = 1;\n        try {\n            n = 2;\n            return n;\n        } finally {\n            n = 3;\n            System.out.println(\"n=\" + n);\n        }\n    }\n    public static void main(String[] args) {\n        System.out.println(calc());\n    }\n}",
+  "options": [
+   "n=3、2 の順に出力される",
+   "n=3、3 の順に出力される",
+   "2 のみが出力される",
+   "2、n=3 の順に出力される"
+  ],
+  "answer": 1,
+  "explanation": "return n の時点で戻り値 2 が確定し、その後 finally で n を変えても戻り値は変わらない。finally は呼び出し元へ戻る前に実行されるので n=3 が先に出力され、4のような順序にはならない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "private 修飾子が付いたメンバーにアクセスできる範囲として正しいものはどれか。",
+  "code": null,
+  "options": [
+   "同じクラス内のみ",
+   "同じパッケージ内のみ",
+   "同じパッケージ内とサブクラス",
+   "すべてのクラス"
+  ],
+  "answer": 1,
+  "explanation": "private は宣言したクラスの中だけからアクセスできる。同じパッケージ内のみ(選択肢2)はデフォルト修飾子の範囲で、private より広い。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Pen {\n    private String color = \"red\";\n}\npublic class Main {\n    public static void main(String[] args) {\n        Pen p = new Pen();\n        System.out.println(p.color);\n    }\n}",
+  "options": [
+   "red",
+   "null",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "private フィールドは Pen クラスの外から参照できないため、コンパイルエラーになる。同じファイル内でも別クラスなので red にはならない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Dog {\n    private String name = \"Pochi\";\n    String getName() { return name; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(new Dog().getName());\n    }\n}",
+  "options": [
+   "Pochi",
+   "null",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 1,
+  "explanation": "getName() はデフォルト修飾子で同じパッケージから呼べ、内部で private の name を返すので Pochi と出力される。直接アクセスではないためエラーにならない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "カプセル化を実現する基本的な設計として最も適切なものはどれか。",
+  "code": null,
+  "options": [
+   "フィールドを public にし、直接代入させる",
+   "フィールドを private にし、public なメソッド経由で操作させる",
+   "すべてのメソッドを private にする",
+   "フィールドを static にする"
+  ],
+  "answer": 2,
+  "explanation": "フィールドを private にして公開メソッドで操作させるのがカプセル化の基本。public フィールド(選択肢1)は内部を隠せずカプセル化にならない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Counter {\n    private int count = 0;\n    public void increment() {\n        count++;\n    }\n    public int getCount() {\n        return count;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Counter c = new Counter();\n        c.increment();\n        c.increment();\n        System.out.println(c.getCount());\n    }\n}",
+  "options": [
+   "0",
+   "2",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "count は同じクラス内のメソッドから変更でき、increment を2回呼ぶので 2 が出力される。private でも自クラスのメソッドからは操作できるのでエラーにならない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Student {\n    private int score;\n    public void setScore(int score) {\n        if (score >= 0 && score <= 100) {\n            this.score = score;\n        }\n    }\n    public int getScore() { return score; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Student s = new Student();\n        s.setScore(80);\n        s.setScore(150);\n        System.out.println(s.getScore());\n    }\n}",
+  "options": [
+   "80",
+   "150",
+   "0",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "150 は範囲外なので setScore 内の if で無視され、80 のまま残る。150 が入る(選択肢2)のは検証がない場合の話。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Book {\n    private String title;\n    public Book(String title) {\n        this.title = title;\n    }\n    public String getTitle() { return title; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Book b = new Book(\"Java\");\n        b.title = \"Python\";\n        System.out.println(b.getTitle());\n    }\n}",
+  "options": [
+   "Java",
+   "Python",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "private の title に Main から直接代入しているため、コンパイルエラーになる。getTitle があっても直接アクセスは許可されない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Person {\n    private String name;\n    public Person(String name) {\n        this.name = name;\n    }\n    public String getName() { return name; }\n    public void rename(Person other) {\n        this.name = other.name;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Person a = new Person(\"Taro\");\n        Person b = new Person(\"Jiro\");\n        a.rename(b);\n        System.out.println(a.getName());\n    }\n}",
+  "options": [
+   "Taro",
+   "Jiro",
+   "コンパイルエラー",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "private は同じクラス内なら別インスタンスの private フィールドにも アクセスできるので、a の name は Jiro になる。コンパイルエラー(選択肢3)になるのは別クラスからの場合。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Lamp {\n        private boolean on;\n        void turnOn() { on = true; }\n    }\n    public static void main(String[] args) {\n        Lamp l = new Lamp();\n        l.turnOn();\n        System.out.println(l.on);\n    }\n}",
+  "options": [
+   "true",
+   "false",
+   "コンパイルエラー",
+   "実行時例外"
+  ],
+  "answer": 1,
+  "explanation": "private メンバーでも同じ外側クラス Main の内部からはアクセスできるため、turnOn() 後の on は true になり true と出力される。コンパイルエラーになるのは別のトップレベルクラスから触った場合である。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Cup {\n        private int ml = 100;\n        int getMl() { return ml; }\n    }\n    public static void main(String[] args) {\n        Cup c = new Cup();\n        int ml = c.getMl() + 50;\n        System.out.println(c.getMl() + \",\" + ml);\n    }\n}",
+  "options": [
+   "150,150",
+   "100,150",
+   "100,100",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "getMl() は値のコピーを返すだけで、ローカル変数 ml を変えてもフィールドは100のままなので 100,150 になる。150,150 はフィールドも変わると誤解した場合の答えである。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "クラス内のメンバーを次の修飾子で宣言したとき、アクセスできる範囲が狭い順に正しく並んだものはどれか。",
+  "code": null,
+  "options": [
+   "public, protected, デフォルト, private",
+   "private, デフォルト, protected, public",
+   "private, protected, デフォルト, public",
+   "デフォルト, private, protected, public"
+  ],
+  "answer": 2,
+  "explanation": "狭い順は private(同じクラス内)、デフォルト(同じパッケージ)、protected(同じパッケージ+サブクラス)、public(どこからでも)である。protected とデフォルトの順を逆にしたものが紛らわしいが、protected はサブクラスにも広がるぶん広い。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Member {\n        private String name;\n        private int age;\n        public Member(String name, int age) {\n            this.name = name;\n            this.age = age;\n        }\n        public void setAge(int age) {\n            if (age > 0) {\n                this.age = age;\n            }\n        }\n        public String toString() { return name + \":\" + age; }\n    }\n    public static void main(String[] args) {\n        Member m = new Member(\"Taro\", 20);\n        m.setAge(-5);\n        m.setAge(30);\n        m.setAge(0);\n        System.out.println(m);\n    }\n}",
+  "options": [
+   "Taro:20",
+   "Taro:30",
+   "Taro:0",
+   "Taro:-5"
+  ],
+  "answer": 2,
+  "explanation": "setAge は正の値のときだけ代入するので、-5 と 0 は無視され、30 だけが反映されて Taro:30 になる。Taro:20 は30の代入も無視されると考えた誤りである。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "import java.util.ArrayList;\nimport java.util.List;\n\npublic class Main {\n    static class Basket {\n        private List<String> items = new ArrayList<>();\n        public List<String> getItems() { return items; }\n        public int size() { return items.size(); }\n    }\n    public static void main(String[] args) {\n        Basket b = new Basket();\n        List<String> list = b.getItems();\n        list.add(\"apple\");\n        list.add(\"orange\");\n        System.out.println(b.size());\n    }\n}",
+  "options": [
+   "0",
+   "2",
+   "コンパイルエラー",
+   "実行時例外"
+  ],
+  "answer": 2,
+  "explanation": "getItems() は内部リストそのものの参照を返すので、外から add すると Basket の中身も変わり size() は 2 になる。フィールドが private でも参照を返せば中身は変更でき、カプセル化が崩れる。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Score {\n        private int point;\n        public Score(int point) { this.point = point; }\n        public int getPoint() { return point; }\n        private void reset() { point = 0; }\n        public void clear() { reset(); }\n    }\n    public static void main(String[] args) {\n        Score s = new Score(80);\n        int before = s.getPoint();\n        s.clear();\n        int after = s.getPoint();\n        System.out.println(before + \" \" + after);\n    }\n}",
+  "options": [
+   "80 80",
+   "0 0",
+   "80 0",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "private の reset() は同じクラスの public clear() から呼べるので、80 の後に 0 になり 80 0 と出力される。reset() が private だからコンパイルエラーとなるわけではない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "phone",
+  "question": "トップレベルのクラス宣言に指定できるアクセス修飾子(または修飾子なし)として正しいものはどれか。",
+  "code": null,
+  "options": [
+   "public のみ",
+   "public と private",
+   "public と、修飾子なし(デフォルト)",
+   "public、protected、修飾子なし"
+  ],
+  "answer": 3,
+  "explanation": "トップレベルのクラスは public か修飾子なし(デフォルト)のどちらかだけ指定できる。protected と private はメンバー(内部クラスなど)用で、トップレベルのクラスには付けられない。"
+ },
+ {
+  "topic": "アクセス修飾子・カプセル化",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "class Light {\n    private int level;\n    public void setLevel(int level) {\n        level = level;\n    }\n    public int getLevel() {\n        return level;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Light light = new Light();\n        light.setLevel(7);\n        System.out.println(light.getLevel());\n    }\n}",
+  "options": [
+   "7",
+   "0",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "setLevel 内の level は引数を指しており、引数を自分自身に代入しているだけでフィールドは変わらないので 0 が出力される。this.level = level; と書かないと、フィールドに値が入らない点が7と間違えやすい。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static { System.out.println(\"A\"); }\n    public static void main(String[] args) {\n        System.out.println(\"B\");\n    }\n}",
+  "options": [
+   "A, B の順に2行出力される",
+   "B, A の順に2行出力される",
+   "B のみ出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "static初期化子はクラスのロード時、main実行前に動くので A が先に出力されます。B が先と考えるのは、staticブロックをmainの後に動くものと誤解した場合です。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "phone",
+  "question": "次のコードを実行したときの出力はどれか。",
+  "code": "public class Main {\n    static int count;\n    Main() { count++; }\n    public static void main(String[] args) {\n        new Main(); new Main();\n        System.out.println(count);\n    }\n}",
+  "options": [
+   "0",
+   "1",
+   "2",
+   "コンパイルエラーになる"
+  ],
+  "answer": 3,
+  "explanation": "static変数countは全インスタンスで1つを共有するため、2回生成すると2になります。1と考えるのは、インスタンスごとにcountがあると誤解した場合です。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "phone",
+  "question": "次のコードを実行したときの出力はどれか。",
+  "code": "public class Main {\n    { System.out.println(\"I\"); }\n    Main() { System.out.println(\"C\"); }\n    public static void main(String[] args) {\n        new Main();\n    }\n}",
+  "options": [
+   "C, I の順に出力される",
+   "I, C の順に出力される",
+   "C のみ出力される",
+   "何も出力されない"
+  ],
+  "answer": 2,
+  "explanation": "インスタンス初期化子はコンストラクタ本体より先に実行されるため I, C の順です。C が先になると考えるのは、初期化子をコンストラクタの後と思い込んだ場合です。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    int x = 5;\n    public static void main(String[] args) {\n        System.out.println(x);\n    }\n}",
+  "options": [
+   "5 が出力される",
+   "0 が出力される",
+   "実行時に NullPointerException が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "staticメソッドからはインスタンス変数にインスタンスなしで直接アクセスできないため、コンパイルエラーです。0が出ると考えるのは、デフォルト値が使われると誤解した場合です。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、出力はどれか。",
+  "code": "class Config {\n    static int value = load();\n    static int load() {\n        System.out.println(\"load\");\n        return 10;\n    }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"start\");\n        System.out.println(Config.value);\n    }\n}",
+  "options": [
+   "load, start, 10",
+   "start, 10, load",
+   "start, load, 10",
+   "start, 10"
+  ],
+  "answer": 3,
+  "explanation": "Configクラスは初めて使われた時(Config.valueの参照時)に初期化され、そこで load が出力されます。load が先頭になるのは、mainの開始時に全クラスが初期化されると誤解した場合です。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、出力はどれか。",
+  "code": "class Util {\n    static final int MAX = 100;\n    static { System.out.println(\"Util init\"); }\n}\npublic class Main {\n    public static void main(String[] args) {\n        System.out.println(\"go\");\n        System.out.println(Util.MAX);\n        System.out.println(\"end\");\n    }\n}",
+  "options": [
+   "go, 100, end",
+   "go, Util init, 100, end",
+   "Util init, go, 100, end",
+   "コンパイルエラーになる"
+  ],
+  "answer": 1,
+  "explanation": "static finalのコンパイル時定数はコンパイル時に値が埋め込まれ、Utilの初期化は起きないので Util init は出力されません。go の後に Util init が出ると考えるのは、通常のstatic変数と同じ扱いにした誤りです。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、出力はどれか。",
+  "code": "public class Main {\n    int a = init(\"a\");\n    { System.out.println(\"block\"); }\n    int b = init(\"b\");\n    Main() { System.out.println(\"ctor\"); }\n    static int init(String s) {\n        System.out.println(s);\n        return 1;\n    }\n    public static void main(String[] args) {\n        new Main();\n    }\n}",
+  "options": [
+   "ctor, a, block, b",
+   "a, b, block, ctor",
+   "block, a, b, ctor",
+   "a, block, b, ctor"
+  ],
+  "answer": 4,
+  "explanation": "フィールド初期化とインスタンス初期化子は記述順に実行され、その後にコンストラクタ本体が動きます。a, b, block の順になると考えるのは、初期化子がフィールドより後だと誤解した場合です。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static int base = 1;\n    static {\n        System.out.println(total);\n    }\n    static int total = 5;\n    public static void main(String[] args) {\n        System.out.println(total);\n    }\n}",
+  "options": [
+   "0 と 5 が順に出力される",
+   "コンパイルエラーになる",
+   "5 と 5 が順に出力される",
+   "実行時に例外が発生する"
+  ],
+  "answer": 2,
+  "explanation": "宣言より前のstaticブロックで単純名 total を読むのは不正な前方参照となり、コンパイルエラーです。0が出ると考えるのは、デフォルト値が読めると思った場合ですが、代入だけなら許されます。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果として、出力はどれか。",
+  "code": "public class Main {\n    static int x = 5;\n    static { x += 3; }\n    static { x *= 2; }\n    public static void main(String[] args) {\n        System.out.println(x);\n    }\n}",
+  "options": [
+   "5",
+   "8",
+   "16",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "static初期化は上から順に実行され、x は 5 → 8 → 16 となる。10(5×2)のように順序を無視すると間違える。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果として、出力はどれか。",
+  "code": "public class Main {\n    static int count;\n    int id;\n    Main() { id = ++count; }\n    public static void main(String[] args) {\n        new Main();\n        new Main();\n        Main m = new Main();\n        System.out.println(m.id + \" \" + count);\n    }\n}",
+  "options": [
+   "1 3",
+   "3 3",
+   "3 1",
+   "0 3"
+  ],
+  "answer": 2,
+  "explanation": "count は static でクラスに1つだけなので3回の生成で3になり、3つ目の id も 3 になる。id は各インスタンス固有だが、最後のインスタンスの値が 3 なので「1 3」ではない。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、各行の出力をカンマ区切りで並べたものはどれか。",
+  "code": "public class Main {\n    int a = init(\"a\");\n    { init(\"block\"); }\n    int b = init(\"b\");\n    Main() { init(\"ctor\"); }\n    static int init(String s) {\n        System.out.println(s);\n        return 1;\n    }\n    public static void main(String[] args) {\n        new Main();\n    }\n}",
+  "options": [
+   "a,block,b,ctor",
+   "ctor,a,block,b",
+   "a,b,block,ctor",
+   "block,a,b,ctor"
+  ],
+  "answer": 1,
+  "explanation": "フィールド初期化子とインスタンス初期化ブロックは書かれた順に実行され、その後にコンストラクタ本体が実行される。フィールドを先にまとめる「a,b,block,ctor」は誤り。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果として、各行の出力をカンマ区切りで並べたものはどれか。",
+  "code": "public class Main {\n    static int a = get();\n    static int b = 7;\n    static int c;\n    static { c = b + 1; }\n    static int get() {\n        return b;\n    }\n    public static void main(String[] args) {\n        System.out.println(a);\n        System.out.println(b);\n        System.out.println(c);\n    }\n}",
+  "options": [
+   "0,7,8",
+   "7,7,8",
+   "0,7,0",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "a の初期化時点では b はまだ初期値 0 なので a は 0 になり、その後 b=7、c=8 となる。メソッド経由の参照は前方参照のコンパイルエラーにならないので、「7,7,8」や「コンパイルエラー」は誤り。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static int n;\n    Main() { n++; }\n    public static void main(String[] args) {\n        new Main(); new Main();\n        System.out.println(n);\n    }\n}",
+  "options": [
+   "0",
+   "1",
+   "2",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "static変数 n はクラスに1つだけ存在し、全インスタンスで共有されるため、コンストラクタが2回呼ばれて 2 になる。1 と考えるのは、インスタンスごとに n を持つと誤解した場合。"
+ },
+ {
+  "topic": "static・初期化の順序",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果として、各行の出力をカンマ区切りで並べたものはどれか。",
+  "code": "public class Main {\n    static { System.out.println(\"A\"); }\n    { System.out.println(\"B\"); }\n    Main() { System.out.println(\"C\"); }\n    public static void main(String[] args) {\n        System.out.println(\"D\");\n        new Main();\n        new Main();\n    }\n}",
+  "options": [
+   "A, D, B, C, B, C",
+   "D, A, B, C, B, C",
+   "A, B, C, D, B, C",
+   "A, D, B, B, C, C"
+  ],
+  "answer": 1,
+  "explanation": "staticブロックはクラスのロード時に1回だけ実行されるため main より先に A が出力され、その後 new のたびに「インスタンス初期化ブロック→コンストラクタ」の順で B, C が出る。D が先と考える選択肢は、main が static ブロックより先に動くと誤解している。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        final int n = 5;\n        n++;\n        System.out.println(n);\n    }\n}",
+  "options": [
+   "5 と表示される",
+   "6 と表示される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "final のローカル変数は一度代入すると再代入できないため、n++ でコンパイルエラーになる。実行時の問題ではなくコンパイル時に検出される点が紛らわしい。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "class A { final void hi() { System.out.println(\"A\"); } }\nclass B extends A {\n    void hi() { System.out.println(\"B\"); }\n}\npublic class Main {\n    public static void main(String[] args) { new B().hi(); }\n}",
+  "options": [
+   "A と表示される",
+   "B と表示される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "final メソッドはオーバーライドできないので、B の hi() の宣言でコンパイルエラーになる。B と表示されるのは final がなければの話。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        final StringBuilder sb = new StringBuilder(\"ab\");\n        sb.append(\"c\");\n        System.out.println(sb);\n    }\n}",
+  "options": [
+   "ab",
+   "abc",
+   "コンパイルエラー",
+   "実行時例外"
+  ],
+  "answer": 2,
+  "explanation": "final は参照変数の再代入を禁止するだけで、指すオブジェクトの中身の変更は可能なので abc になる。append をコンパイルエラーと考えるのは誤り。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "abstract class Tool {\n    abstract void use() { System.out.println(\"use\"); }\n}\npublic class Main {\n    public static void main(String[] args) { System.out.println(\"x\"); }\n}",
+  "options": [
+   "x と表示される",
+   "use と表示される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "abstract メソッドは本体 { } を持てないため、Tool の宣言でコンパイルエラーになる。Tool を使っていなくても、宣言自体が誤りなので x は表示されない。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "abstract class Report {\n    void print() {\n        System.out.println(header() + \":\" + body());\n    }\n    String header() { return \"H\"; }\n    abstract String body();\n}\nclass Sales extends Report {\n    String header() { return \"S\"; }\n    String body() { return \"data\"; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        new Sales().print();\n    }\n}",
+  "options": [
+   "H:data",
+   "S:data",
+   "S:null",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "print() 内の header() と body() は実際のオブジェクト(Sales)のオーバーライド版が呼ばれるので S:data になる。H:data は Report 側の header() が呼ばれると誤解した場合の答え。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "abstract class Account {\n    abstract int fee();\n    abstract String name();\n}\nclass Saving extends Account {\n    int fee() { return 100; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Account a = new Saving();\n        System.out.println(a.fee());\n    }\n}",
+  "options": [
+   "100 と表示される",
+   "null と表示される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "Saving が abstract でないのに name() を実装していないため、Saving の宣言でコンパイルエラーになる。fee() だけ呼ぶからといって、未実装は許されない。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "class Item {\n    private final int price;\n    Item(int price) { this.price = price; }\n    int getPrice() { return price; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        Item a = new Item(100);\n        Item b = new Item(250);\n        a = b;\n        System.out.println(a.getPrice() + \" \" + b.getPrice());\n    }\n}",
+  "options": [
+   "100 250",
+   "250 250",
+   "100 100",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "final なのは Item の price フィールドで、変数 a は final ではないので a = b は可能。a と b は同じオブジェクトを指すため 250 250 になる。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行するとどうなるか。",
+  "code": "class User {\n    private final String name;\n    private int age;\n    User(int age) {\n        this.age = age;\n    }\n    String getName() { return name; }\n}\npublic class Main {\n    public static void main(String[] args) {\n        User u = new User(20);\n        System.out.println(u.getName());\n    }\n}",
+  "options": [
+   "null と表示される",
+   "20 と表示される",
+   "コンパイルエラーになる",
+   "NullPointerException が発生する"
+  ],
+  "answer": 3,
+  "explanation": "final のインスタンスフィールドはコンストラクタ終了までに必ず初期化しなければならず、name が未初期化なのでコンパイルエラーになる。通常のフィールドのように null が入るわけではない。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static abstract class Pen {\n        abstract String ink();\n    }\n    public static void main(String[] args) {\n        Pen p = new Pen();\n        System.out.println(p.ink());\n    }\n}",
+  "options": [
+   "blue と表示される",
+   "null と表示される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "抽象クラスは new でインスタンス化できないため、コンパイルエラーになる。実行時例外になるのではなく、コンパイル段階で止まる点が紛らわしい。"
+ },
+ {
+  "topic": "抽象クラス・final",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static abstract class Animal {\n        String name;\n        Animal(String name) {\n            this.name = name;\n            System.out.println(\"Animal \" + name);\n        }\n        abstract void speak();\n    }\n    static class Dog extends Animal {\n        Dog(String name) {\n            super(name);\n            System.out.println(\"Dog\");\n        }\n        void speak() { System.out.println(\"Woof\"); }\n    }\n    public static void main(String[] args) {\n        Animal a = new Dog(\"Pochi\");\n        a.speak();\n    }\n}",
+  "options": [
+   "Dog、Woof の順に表示される",
+   "Animal Pochi、Dog、Woof の順に表示される",
+   "Animal Pochi、Woof の順に表示される",
+   "抽象クラスにコンストラクタは書けないのでコンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "抽象クラスにもコンストラクタを持て、サブクラスのコンストラクタから super で呼ばれるので、Animal Pochi、Dog、Woof の順になる。選択肢4は、抽象クラスはコンストラクタを持てないという誤解。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "class Car { String name = \"car\"; }\nclass Taxi extends Car { String name = \"taxi\"; }\npublic class Main {\n    public static void main(String[] args) {\n        Car c = new Taxi();\n        System.out.println(c.name);\n    }\n}",
+  "options": [
+   "taxi",
+   "コンパイルエラー",
+   "car",
+   "ClassCastException"
+  ],
+  "answer": 3,
+  "explanation": "フィールドはオーバーライドされず、参照変数の型(Car)で決まるので car が出力される。メソッドなら実体の型で決まるが、フィールドは違うので taxi は誤り。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "class Shape { } class Circle extends Shape { }\npublic class Main {\n    public static void main(String[] args) {\n        Shape s = new Shape();\n        Circle c = (Circle) s;\n        System.out.println(\"done\");\n    }\n}",
+  "options": [
+   "done",
+   "コンパイルエラー",
+   "ClassCastException が発生する",
+   "NullPointerException が発生する"
+  ],
+  "answer": 3,
+  "explanation": "Circle は Shape のサブクラスなのでダウンキャストはコンパイルできるが、実体が Shape なので実行時に ClassCastException になる。コンパイルエラーではない点が紛らわしい。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "class Cat { }\nclass Dog { }\npublic class Main {\n    public static void main(String[] args) {\n        Cat c = new Cat();\n        Dog d = (Dog) c;\n    }\n}",
+  "options": [
+   "正常終了する(出力なし)",
+   "コンパイルエラー",
+   "ClassCastException",
+   "NullPointerException"
+  ],
+  "answer": 2,
+  "explanation": "Cat と Dog は継承関係がないので、キャストの時点でコンパイルエラーになる。実行時例外になるのは継承関係がある場合に限られる。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "phone",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "class Base { }\nclass Sub extends Base { void hello() { System.out.println(\"hi\"); } }\npublic class Main {\n    public static void main(String[] args) {\n        Base b = new Sub();\n        b.hello();\n    }\n}",
+  "options": [
+   "hi",
+   "実行時に ClassCastException",
+   "何も出力されない",
+   "コンパイルエラー"
+  ],
+  "answer": 4,
+  "explanation": "呼び出せるメンバーは参照変数の型(Base)で決まり、Base には hello() がないのでコンパイルエラー。実体が Sub でも関係ない。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果として、各行の出力はどれか(「 / 」で区切って表記)。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Object obj = \"Java17\";\n        if (obj instanceof String s && s.length() > 5) {\n            System.out.println(s.toUpperCase());\n        } else {\n            System.out.println(\"no\");\n        }\n        Object num = 10;\n        if (num instanceof String t) System.out.println(t);\n        else System.out.println(\"not string\");\n    }\n}",
+  "options": [
+   "JAVA17 / not string",
+   "Java17 / not string",
+   "JAVA17 / no",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "obj は String で長さ6なので条件が真になり JAVA17、num は Integer なので else 側の not string になる。Object 型からの instanceof String はコンパイルできるのでエラーではない。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果として、各行の出力はどれか(「 / 」で区切って表記)。",
+  "code": "class Vehicle { }\nclass Bike extends Vehicle { }\npublic class Main {\n    static void print(Vehicle v) { System.out.println(\"Vehicle\"); }\n    static void print(Bike b) { System.out.println(\"Bike\"); }\n    public static void main(String[] args) {\n        Vehicle v = new Bike();\n        print(v);\n        print(new Bike());\n        print((Bike) v);\n    }\n}",
+  "options": [
+   "Vehicle / Bike / Bike",
+   "Vehicle / Vehicle / Bike",
+   "Bike / Bike / Bike",
+   "Vehicle / Bike / Vehicle"
+  ],
+  "answer": 1,
+  "explanation": "オーバーロードはコンパイル時の変数の型で選ばれるので、print(v) は Vehicle 版、キャストした式は Bike 版になる。実体が Bike でも print(v) が Bike 版にならない点が紛らわしい。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        String text = \"hello\";\n        Object obj = text;\n        if (obj instanceof String) {\n            System.out.println(\"obj is String\");\n        }\n        if (text instanceof Integer) {\n            System.out.println(\"text is Integer\");\n        }\n    }\n}",
+  "options": [
+   "obj is String",
+   "obj is String / text is Integer",
+   "何も出力されない",
+   "コンパイルエラー"
+  ],
+  "answer": 4,
+  "explanation": "String 型の変数を Integer と instanceof 判定するのは、型に継承関係がないためコンパイルエラーになる。Object 型の obj の判定は問題ないので、1つ目の出力だけ行われるわけではない。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "interface Printable { }\nclass Report { }\npublic class Main {\n    public static void main(String[] args) {\n        Report r = new Report();\n        System.out.println(\"start\");\n        Printable p = (Printable) r;\n        System.out.println(\"end\");\n    }\n}",
+  "options": [
+   "start / end",
+   "start を出力した後、ClassCastException が発生する",
+   "コンパイルエラー",
+   "ClassCastException が発生し、start は出力されない"
+  ],
+  "answer": 2,
+  "explanation": "Report は final でないため、サブクラスが Printable を実装している可能性があり、インタフェースへのキャストはコンパイルできる。実体の Report は実装していないので、start の出力後に実行時例外になる。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "phone",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Book { }\n    static class Comic extends Book { }\n    public static void main(String[] args) {\n        Book b = new Book();\n        Comic c = (Comic) b;\n        System.out.println(\"done\");\n    }\n}",
+  "options": [
+   "done",
+   "コンパイルエラー",
+   "ClassCastException が発生する",
+   "NullPointerException が発生する"
+  ],
+  "answer": 3,
+  "explanation": "Comic は Book のサブクラスなのでコンパイルは通るが、実体は Book なので実行時に ClassCastException になる。コンパイルエラーではない点が紛らわしい。"
+ },
+ {
+  "topic": "多態性・キャスト・instanceof",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static class Parent {\n        String name = \"parent\";\n        String hello() { return \"P-hello\"; }\n    }\n    static class Child extends Parent {\n        String name = \"child\";\n        String hello() { return \"C-hello\"; }\n    }\n    public static void main(String[] args) {\n        Parent p = new Child();\n        System.out.println(p.name);\n        System.out.println(p.hello());\n    }\n}",
+  "options": [
+   "parent / C-hello",
+   "child / C-hello",
+   "parent / P-hello",
+   "child / P-hello"
+  ],
+  "answer": 1,
+  "explanation": "フィールドは宣言型(Parent)で決まるので parent、メソッドはオーバーライドされ実体型(Child)で決まるので C-hello になる。フィールドもメソッドと同じく実体型で決まると考えると child / C-hello と誤る。"
+ },
+ {
+  "topic": "プリミティブ型・ラッパー・型変換・キャスト",
+  "kind": "phone",
+  "question": "次のコードを実行したとき、標準出力に表示される内容はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        Integer a = 127, b = 127;\n        Integer c = 128, d = 128;\n        System.out.println((a == b) + \" \" + (c == d));\n    }\n}",
+  "options": [
+   "true true",
+   "true false",
+   "false false",
+   "false true"
+  ],
+  "answer": 2,
+  "explanation": "Integer は -128〜127 の値だけキャッシュされた同じオブジェクトが使われるので、127 同士は == で true、128 同士は別オブジェクトなので false になる。「true true」は == が値比較だと思い込んだ場合の誤りである。"
+ },
+ {
+  "topic": "プリミティブ型・ラッパー・型変換・キャスト",
+  "kind": "phone",
+  "question": "次のコードを実行したとき、出力される値はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        byte b = (byte) 200;\n        System.out.println(b);\n    }\n}",
+  "options": [
+   "200",
+   "127",
+   "-56",
+   "コンパイルエラー"
+  ],
+  "answer": 3,
+  "explanation": "byte の範囲は -128〜127 で、200 をキャストすると上位ビットが切り捨てられ 200-256=-56 になる。キャストを明示しているのでコンパイルエラーにはならない。"
+ },
+ {
+  "topic": "プリミティブ型・ラッパー・型変換・キャスト",
+  "kind": "phone",
+  "question": "次のコードをコンパイルしたときの結果として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        float f = 3.14;\n        System.out.println(f);\n    }\n}",
+  "options": [
+   "3.14 と出力される",
+   "3 と出力される",
+   "実行時に例外が発生する",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "3.14 は double リテラルで、float への暗黙の縮小変換はできないためコンパイルエラーになる(3.14f と書けば通る)。実行時例外ではなくコンパイル時に弾かれる点に注意。"
+ },
+ {
+  "topic": "プリミティブ型・ラッパー・型変換・キャスト",
+  "kind": "deep",
+  "question": "次のコードを実行したとき、標準出力に表示される内容はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        int max = Integer.MAX_VALUE;\n        int next = max + 1;\n        long big = max + 1;\n        long right = max + 1L;\n        System.out.println(next);\n        System.out.println(big);\n        System.out.println(right);\n    }\n}",
+  "options": [
+   "-2147483648、2147483648、2147483648 の順に3行",
+   "-2147483648、-2147483648、2147483648 の順に3行",
+   "2147483648 が3行",
+   "実行時に ArithmeticException が発生する"
+  ],
+  "answer": 2,
+  "explanation": "max + 1 は int 同士の計算でオーバーフローして -2147483648 になり、それを long に代入しても値は変わらない。max + 1L は long で計算されるので 2147483648 になる。Java の int のオーバーフローでは例外は出ない。"
+ },
+ {
+  "topic": "プリミティブ型・ラッパー・型変換・キャスト",
+  "kind": "deep",
+  "question": "次のコードを実行したときの動作として正しいものはどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        String s1 = \"42\";\n        int n = Integer.parseInt(s1);\n        Integer boxed = Integer.valueOf(\"17\");\n        System.out.println(n + boxed);\n        String s2 = \"4.5\";\n        int m = Integer.parseInt(s2);\n        System.out.println(m);\n    }\n}",
+  "options": [
+   "59 と 4 が出力される",
+   "59 と 5 が出力される",
+   "コンパイルエラーになる",
+   "59 を出力した後、NumberFormatException が発生する"
+  ],
+  "answer": 4,
+  "explanation": "n + boxed は 42+17=59 を出力する。しかし \"4.5\" は int として解析できないため Integer.parseInt で NumberFormatException が発生する。小数が切り捨てられると考えるのが紛らわしい誤りである。"
+ },
+ {
+  "topic": "プリミティブ型・ラッパー・型変換・キャスト",
+  "kind": "deep",
+  "question": "次のコードを実行したとき、標準出力に表示される内容はどれか。",
+  "code": "public class Main {\n    public static void main(String[] args) {\n        int a = 7;\n        int b = 2;\n        double d1 = a / b;\n        double d2 = (double) a / b;\n        double d3 = (double) (a / b);\n        short s = 10;\n        s += 5.7;\n        System.out.println(d1 + \" \" + d2);\n        System.out.println(d3 + \" \" + s);\n    }\n}",
+  "options": [
+   "3.5 3.5 の行と 3.5 15 の行",
+   "3.0 3.5 の行と 3.0 15 の行",
+   "3.0 3.5 の行と 3.0 16 の行",
+   "コンパイルエラーになる"
+  ],
+  "answer": 2,
+  "explanation": "a / b は int 同士の割り算で 3 になってから double になるので d1 と d3 は 3.0、d2 だけ 3.5 になる。s += 5.7 は複合代入で自動的に short へキャストされ、15.7 の小数部が切り捨てられて 15 になるのでコンパイルエラーにはならない。"
+ },
+ {
+  "topic": "メソッド・オーバーロード・可変長引数・参照渡し",
+  "kind": "phone",
+  "question": "次のコードを実行したときの出力はどれか。",
+  "code": "public class Main {\n    static void p(long x) { System.out.println(\"long\"); }\n    static void p(Integer x) { System.out.println(\"Integer\"); }\n    public static void main(String[] args) {\n        p(5);\n    }\n}",
+  "options": [
+   "long",
+   "Integer",
+   "コンパイルエラー",
+   "実行時例外"
+  ],
+  "answer": 1,
+  "explanation": "オーバーロードの解決では、拡張変換(int→long)がボクシング(int→Integer)より先に試されるため long が選ばれる。Integer を選びがちだが、ボクシングは後回しになる。"
+ },
+ {
+  "topic": "メソッド・オーバーロード・可変長引数・参照渡し",
+  "kind": "phone",
+  "question": "次のコードを実行した結果、各行の出力を「 / 」で区切って並べたものはどれか。",
+  "code": "public class Main {\n    static void show(int a, int b) { System.out.println(\"two\"); }\n    static void show(int... a) { System.out.println(\"var\" + a.length); }\n    public static void main(String[] args) {\n        show(1, 2);\n        show(1, 2, 3);\n        show();\n    }\n}",
+  "options": [
+   "two / var3 / var0",
+   "var2 / var3 / var0",
+   "two / var3 / コンパイルエラー",
+   "two / two / var0"
+  ],
+  "answer": 1,
+  "explanation": "可変長引数のメソッドは最後に検討されるので、show(1, 2) は固定引数の show(int, int) が選ばれ、他の2つは可変長版になる。var2 とするのは可変長が優先されると誤解した場合。"
+ },
+ {
+  "topic": "メソッド・オーバーロード・可変長引数・参照渡し",
+  "kind": "deep",
+  "question": "次のコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static void f(Integer a, int b) {\n        System.out.println(\"A\");\n    }\n    static void f(int a, Integer b) {\n        System.out.println(\"B\");\n    }\n    public static void main(String[] args) {\n        int x = 1;\n        int y = 2;\n        f(x, y);\n    }\n}",
+  "options": [
+   "A と出力される",
+   "B と出力される",
+   "コンパイルエラーになる",
+   "実行時に例外が発生する"
+  ],
+  "answer": 3,
+  "explanation": "引数が (int, int) では、どちらのメソッドもボクシング(またはアンボクシング)が必要で優劣がつかず、呼び出しがあいまいでコンパイルエラーになる。A を選びがちだが、先頭の引数をボクシングしても決まらない。"
+ },
+ {
+  "topic": "メソッド・オーバーロード・可変長引数・参照渡し",
+  "kind": "deep",
+  "question": "次のコードを実行した結果、各行の出力を「 / 」で区切って並べたものはどれか。",
+  "code": "public class Main {\n    static void print(Object o) {\n        System.out.println(\"Object\");\n    }\n    static void print(String s) {\n        System.out.println(\"String\");\n    }\n    public static void main(String[] args) {\n        Object o = \"hi\";\n        print(null);\n        print(o);\n        print(\"hi\");\n    }\n}",
+  "options": [
+   "Object / Object / Object",
+   "String / Object / String",
+   "String / String / String",
+   "コンパイルエラー"
+  ],
+  "answer": 2,
+  "explanation": "オーバーロードは変数の宣言型で決まり、o は Object 型なので Object 版が呼ばれる。null はより具体的な String 版が選ばれ、String と Object は継承関係にあるのであいまいにならない。"
+ },
+ {
+  "topic": "メソッド・オーバーロード・可変長引数・参照渡し",
+  "kind": "phone",
+  "question": "次のコードを実行したときの出力はどれか。",
+  "code": "public class Main {\n    static void f(long x) { System.out.println(\"long\"); }\n    static void f(Integer x) { System.out.println(\"Integer\"); }\n    static void f(int... x) { System.out.println(\"varargs\"); }\n    public static void main(String[] args) {\n        byte b = 1;\n        f(b);\n    }\n}",
+  "options": [
+   "long",
+   "Integer",
+   "varargs",
+   "コンパイルエラー"
+  ],
+  "answer": 1,
+  "explanation": "オーバーロード解決は「拡張変換 → ボクシング → 可変長引数」の順で探すため、byte から long への拡張が最初に見つかります。Integer は byte からボクシングできず、そもそも候補になりません。"
+ },
+ {
+  "topic": "メソッド・オーバーロード・可変長引数・参照渡し",
+  "kind": "deep",
+  "question": "このコードをコンパイル・実行した結果はどれか。",
+  "code": "public class Main {\n    static void calc(int a, long b) { System.out.println(\"A\"); }\n    static void calc(long a, int b) { System.out.println(\"B\"); }\n    static void calc(long a, long b) { System.out.println(\"C\"); }\n    public static void main(String[] args) {\n        calc(1, 2L);\n        calc(1L, 2);\n        calc(1L, 2L);\n        calc(1, 2);\n    }\n}",
+  "options": [
+   "A B C A と出力される",
+   "A B C B と出力される",
+   "A B C C と出力される",
+   "コンパイルエラーになる"
+  ],
+  "answer": 4,
+  "explanation": "calc(1, 2) は3つとも適用可能で、A と B はどちらが特定的とも決まらず(C は両方より広いので除外)、あいまいなためコンパイルエラーです。最も広い C が選ばれると考えるのは誤りです。"
+ }
+]
