@@ -89,8 +89,9 @@ function sessionDone() {
 
 function nextQuestion() {
   if (sessionDone() && !view.extended) return finish();
-  const q = pickNext(data, bank, today(), view);
-  if (!q) return finish();
+  const picked = pickNext(data, bank, today(), view);
+  if (!picked) return finish();
+  const q = shuffleOptions(picked);
   view.used.add(q.id);
   view.current = q;
   view.shownAt = Date.now();
@@ -195,7 +196,7 @@ function backup() {
 
 // 本番形式モック（途中で答えは見せず、最後にまとめて採点する）
 function startMock() {
-  const questions = pickMock(bank);
+  const questions = pickMock(bank).map((q) => shuffleOptions(q));
   view = { mock: true, questions, answers: [], index: 0, endAt: Date.now() + MOCK_MINUTES * 60 * 1000 };
   mockQuestion();
 }

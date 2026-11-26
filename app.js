@@ -131,6 +131,19 @@ function weekMinutes(data, today) {
 }
 
 // 本番形式のモック: 全カテゴリからまんべんなく60問。
+// 解説や選択肢が番号・並び順を指している問題は、並びを変えると解説が合わなくなるので固定する（疑わしければ固定）
+const ORDER_BOUND = /選択肢の?\s*[1-4１-４]|[1-4１-４]\s*番|[①②③④]|(?:^|[。．）)]|誤り。)\s*[1-4１-４]\s*(?:は|を|が|も|と(?:答|考|する|し))|(?:最初|最後|残り|つ目)の選択肢|並び|上記|上の選択肢|下の選択肢|以上のすべて|すべて正し|どれでもない|いずれでもない|前者|後者/;
+
+function shuffleOptions(q, random = Math.random) {
+  if (ORDER_BOUND.test(q.explanation) || q.options.some((o) => ORDER_BOUND.test(o))) return q;
+  const order = [0, 1, 2, 3];
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return Object.assign({}, q, { options: order.map((i) => q.options[i]), answer: order.indexOf(q.answer - 1) + 1 });
+}
+
 function pickMock(bank) {
   const byCat = {};
   const catOf = Object.fromEntries(bank.topics.map((t) => [t.topic, t.cat]));
@@ -162,5 +175,5 @@ function mockResult(bank, questions, answers) {
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { emptyData, recordAnswer, pickNext, streak, weekMinutes, dayDone, pickMock, mockResult, addDays, dateKey, topicAccuracy };
+  module.exports = { emptyData, recordAnswer, pickNext, streak, weekMinutes, dayDone, pickMock, mockResult, shuffleOptions, addDays, dateKey, topicAccuracy };
 }
